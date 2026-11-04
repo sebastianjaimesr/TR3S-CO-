@@ -1,0 +1,168 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ink: #080808;
+  --color-coal: #111111;
+  --color-graphite: #242424;
+  --color-smoke: #888888;
+  --color-paper: #ffffff;
+  --color-bone: #f5f3ef;
+  --color-wine: #851f29;
+  --color-crimson: #a52632;
+  --color-line: rgb(255 255 255 / 0.1);
+
+  --font-display: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-editorial: var(--font-instrument-serif), ui-serif, Georgia, serif;
+
+  --radius-card: 4px;
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@layer base {
+  html {
+    background: var(--color-ink);
+    color: var(--color-bone);
+    color-scheme: dark;
+    -webkit-tap-highlight-color: transparent;
+    scroll-behavior: smooth;
+  }
+  body {
+    font-family: var(--font-sans);
+    background: var(--color-ink);
+    min-height: 100dvh;
+    text-rendering: optimizeLegibility;
+  }
+  ::selection {
+    background: var(--color-wine);
+    color: var(--color-paper);
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-crimson);
+    outline-offset: 3px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  .eyebrow {
+    font-family: var(--font-display);
+    font-size: 0.6875rem;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--color-smoke);
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 3rem;
+    padding: 0 1.5rem;
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    border-radius: 2px;
+    transition:
+      background-color 0.25s var(--ease-out-expo),
+      color 0.25s var(--ease-out-expo),
+      border-color 0.25s var(--ease-out-expo),
+      transform 0.25s var(--ease-out-expo);
+  }
+  .btn:active {
+    transform: scale(0.98);
+  }
+  .btn:disabled,
+  .btn[aria-disabled="true"] {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  .btn-primary {
+    background: var(--color-paper);
+    color: var(--color-ink);
+  }
+  .btn-primary:hover:not(:disabled) {
+    background: var(--color-crimson);
+    color: var(--color-paper);
+  }
+  .btn-ghost {
+    border: 1px solid rgb(255 255 255 / 0.25);
+    color: var(--color-paper);
+  }
+  .btn-ghost:hover:not(:disabled) {
+    border-color: var(--color-paper);
+    background: rgb(255 255 255 / 0.06);
+  }
+  .btn-accent {
+    background: var(--color-wine);
+    color: var(--color-paper);
+  }
+  .btn-accent:hover:not(:disabled) {
+    background: var(--color-crimson);
+  }
+  .field {
+    width: 100%;
+    min-height: 3rem;
+    padding: 0.75rem 0.875rem;
+    background: var(--color-coal);
+    border: 1px solid rgb(255 255 255 / 0.12);
+    border-radius: 2px;
+    color: var(--color-paper);
+    font-size: 0.9375rem;
+  }
+  .field:focus {
+    outline: none;
+    border-color: var(--color-crimson);
+  }
+  .field-label {
+    display: block;
+    margin-bottom: 0.375rem;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    color: var(--color-smoke);
+    text-transform: uppercase;
+  }
+  .monumental {
+    font-family: var(--font-display);
+    font-weight: 700;
+    line-height: 0.8;
+    letter-spacing: -0.04em;
+    -webkit-text-stroke: 1px rgb(255 255 255 / 0.1);
+    color: transparent;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+  .prose-tr3s h2 {
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 2rem 0 0.75rem;
+    color: var(--color-paper);
+  }
+  .prose-tr3s p,
+  .prose-tr3s li {
+    color: rgb(245 243 239 / 0.75);
+    line-height: 1.7;
+    margin-bottom: 0.75rem;
+  }
+  .prose-tr3s ul {
+    list-style: disc;
+    padding-left: 1.25rem;
+  }
+}
