@@ -2,7 +2,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { Product } from "@/types/domain";
-import { AvailabilityBadge, Price, ProductFlags, QuickAdd } from "@/features/catalog/bits";
+import { AvailabilityBadge, NoPhoto, Price, ProductFlags, QuickAdd } from "@/features/catalog/bits";
 import { productAvailability, shortestLeadTime } from "@/services/availability";
 import { useWishlist } from "@/features/wishlist/store";
 import { HeartIcon } from "@/components/icons";
@@ -28,6 +28,7 @@ export function ProductCard({ product, priority }: { product: Product; priority?
         <HeartIcon filled={hydrated && wished} />
       </button>
       <Link href={`/product/${product.slug}`} className="relative block aspect-square overflow-hidden bg-graphite/40">
+        {!img && <NoPhoto brand={product.brand.name} compact />}
         {img && (
           <Image
             src={img.url}

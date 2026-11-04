@@ -36,7 +36,7 @@ insert into user_roles values
   ('00000000-0000-0000-0000-00000000000c', 'inventory');
 
 insert into brands (id, slug, name) values ('10000000-0000-0000-0000-000000000001', 'marca-x', 'Marca X');
-insert into categories (id, slug, name) values ('20000000-0000-0000-0000-000000000001', 'sneakers', 'Sneakers');
+insert into categories (id, slug, name) values ('20000000-0000-0000-0000-000000000001', 'test-cat', 'Test');
 insert into suppliers (id, name) values ('30000000-0000-0000-0000-000000000001', 'Proveedor Test');
 
 insert into products (id, slug, name, reference, brand_id, category_id, price, is_active, is_demo) values

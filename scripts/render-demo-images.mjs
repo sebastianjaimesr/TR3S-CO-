@@ -18,7 +18,7 @@ for (const slug of demoSlugs) {
     await page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 60000 });
     await page.waitForTimeout(1500);
     const png = `public/demo/${slug}${view === "top" ? "-top" : ""}.png`;
-    await page.screenshot({ path: png, omitBackground: true });
+    await page.screenshot({ path: png, omitBackground: true, timeout: 180000 });
     execFileSync("python3", ["-c", `from PIL import Image; im=Image.open('${png}'); im=im.crop(im.getbbox()); im.thumbnail((1200,1200)); W=max(im.size)+120; bg=Image.new('RGBA',(W,W),(0,0,0,0)); bg.paste(im,((W-im.width)//2,(W-im.height)//2)); bg.save('${png.replace(".png", ".webp")}', quality=88)`]);
     execFileSync("rm", [png]);
     console.log("rendered", slug, view);

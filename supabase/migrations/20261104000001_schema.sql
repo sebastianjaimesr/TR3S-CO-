@@ -83,6 +83,12 @@ create table if not exists categories (
   position int not null default 0
 );
 
+-- Store taxonomy (not product data)
+insert into categories (slug, name, position) values
+  ('sneakers', 'Sneakers', 1), ('lifestyle', 'Lifestyle', 2), ('running', 'Running', 3), ('training', 'Training', 4),
+  ('casual', 'Casual', 5), ('formal', 'Formal', 6), ('boots', 'Boots', 7), ('sandals', 'Sandals', 8), ('platforms', 'Platforms', 9)
+on conflict (slug) do nothing;
+
 create table if not exists suppliers (
   id uuid primary key default gen_random_uuid(),
   name text not null,

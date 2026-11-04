@@ -1,4 +1,6 @@
 import "server-only";
+import { revalidateTag } from "next/cache";
+import { CATALOG_TAG } from "@/services/catalog";
 import { supabaseService } from "@/lib/supabase/server";
 import { mapWompiStatus, type WompiTransaction } from "@/services/payments/wompi";
 
@@ -26,6 +28,11 @@ export async function applyWompiTransaction(tx: WompiTransaction) {
     p_raw: tx as unknown as Record<string, unknown>,
   });
   if (e2) throw new Error(e2.message);
+  // payment may sell or release reserved stock. Not allowed during a page render
+  // (checkout/result); there the 60 s cache window plus the webhook cover it.
+  try {
+    revalidateTag(CATALOG_TAG);
+  } catch {}
   return { ok: true as const, status: (data as { status: string }).status };
 }
 

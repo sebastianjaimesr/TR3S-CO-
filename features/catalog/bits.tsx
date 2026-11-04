@@ -128,3 +128,15 @@ export function QuickAdd({ product, className }: { product: Product; className?:
     </div>
   );
 }
+
+/** Shown when a real product has no photo yet. Never replaced with a stand-in image of another shoe. */
+export function NoPhoto({ brand, compact }: { brand?: string; compact?: boolean }) {
+  return (
+    <div className="absolute inset-0 grid place-items-center text-center" aria-hidden="true">
+      <div>
+        {brand && <p className={cn("font-display font-bold uppercase tracking-tight text-paper/10", compact ? "text-2xl" : "text-5xl md:text-7xl")}>{brand}</p>}
+        <p className={cn("mt-2 uppercase tracking-[0.25em] text-smoke", compact ? "text-[9px]" : "text-[11px]")}>Foto en producción</p>
+      </div>
+    </div>
+  );
+}

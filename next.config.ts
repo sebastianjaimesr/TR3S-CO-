@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 
-const supabaseHost = process.env.NEXT_PUBLIC_SUPABASE_URL ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).hostname : undefined;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL) : undefined;
+// Only Supabase Storage public objects (plus Cloudinary) may be optimized by next/image.
+const supabasePattern = supabaseUrl
+  ? [{ protocol: supabaseUrl.protocol.replace(":", "") as "http" | "https", hostname: supabaseUrl.hostname, port: supabaseUrl.port, pathname: "/storage/v1/object/public/**" }]
+  : [];
 
 const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
@@ -16,7 +20,7 @@ const nextConfig: NextConfig = {
   images: {
     formats: ["image/avif", "image/webp"],
     remotePatterns: [
-      ...(supabaseHost ? [{ protocol: "https" as const, hostname: supabaseHost }] : []),
+      ...supabasePattern,
       { protocol: "https", hostname: "res.cloudinary.com" },
     ],
   },

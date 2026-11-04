@@ -16,6 +16,10 @@ export async function POST(req: Request) {
   } catch {
     return NextResponse.json({ error: "invalid json" }, { status: 400 });
   }
+  const headerChecksum = req.headers.get("x-event-checksum");
+  if (headerChecksum && event?.signature?.checksum && headerChecksum.toLowerCase() !== String(event.signature.checksum).toLowerCase()) {
+    return NextResponse.json({ error: "checksum mismatch" }, { status: 401 });
+  }
   if (!verifyEvent(event, serverEnv().wompiEventsSecret)) {
     console.warn("[wompi] rejected event with invalid checksum");
     return NextResponse.json({ error: "invalid signature" }, { status: 401 });

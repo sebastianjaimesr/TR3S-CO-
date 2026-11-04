@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion, useScroll, useMotionValueEvent } from "framer-motion";
 import type { HeroCampaign, Product } from "@/types/domain";
-import { AvailabilityBadge, Price, ProductFlags, QuickAdd } from "@/features/catalog/bits";
+import { AvailabilityBadge, NoPhoto, Price, ProductFlags, QuickAdd } from "@/features/catalog/bits";
 import { productAvailability, shortestLeadTime } from "@/services/availability";
 import { ArrowIcon } from "@/components/icons";
 import { cn } from "@/lib/format";
@@ -65,7 +65,7 @@ export function Hero({ campaign, products }: { campaign: HeroCampaign; products:
         <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-ink to-transparent" />
       </div>
 
-      <div className="relative mx-auto grid max-w-[1600px] grid-cols-1 px-4 pt-6 md:px-8 lg:min-h-[calc(100svh-72px-250px)] lg:grid-cols-12 lg:pt-10">
+      <div className="relative mx-auto grid max-w-[1600px] grid-cols-1 px-4 pt-6 md:px-8 lg:min-h-[max(460px,calc(100svh-72px-300px))] lg:grid-cols-12 lg:pt-10">
         {/* LEFT: campaign copy */}
         <div className="relative z-10 lg:col-span-3 lg:flex lg:flex-col lg:justify-center">
           <p className="eyebrow mb-4">TR3S &amp; CO. · Multimarca</p>
@@ -88,7 +88,7 @@ export function Hero({ campaign, products }: { campaign: HeroCampaign; products:
                 exit={{ opacity: 0, y: reduced ? 0 : -40 }}
                 transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
                 className="monumental select-none whitespace-nowrap text-[30vw] lg:text-[17vw]"
-                style={{ color: "rgb(255 255 255 / 0.035)" }}
+                style={{ color: "rgb(255 255 255 / 0.05)" }}
               >
                 {word}
               </motion.span>
@@ -112,6 +112,8 @@ export function Hero({ campaign, products }: { campaign: HeroCampaign; products:
                 exit={{ opacity: 0, scale: 0.96, x: reduced ? 0 : -40 }}
                 transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
               >
+                {/* the TR3S watermark already fills the stage */}
+                {!product.images[0] && !has3D && <div className="absolute inset-x-0 bottom-[22%]"><NoPhoto /></div>}
                 {product.images[0] && (
                   <Image
                     src={product.images[0].url}
@@ -208,7 +210,7 @@ function HeroCarousel({ products, index, onSelect }: { products: Product[]; inde
   };
   return (
     <div className="relative border-t border-line">
-      <div className="mx-auto flex max-w-[1600px] items-center justify-between px-4 pb-3 pt-5 md:px-8">
+      <div className="mx-auto flex max-w-[1600px] items-center justify-between px-4 pb-3 pt-4 md:px-8">
         <h2 className="eyebrow">Featured · {String(index + 1).padStart(2, "0")} / {String(products.length).padStart(2, "0")}</h2>
         <div className="flex gap-2">
           <button type="button" onClick={() => select((index - 1 + products.length) % products.length)} className="grid h-10 w-10 place-items-center border border-line hover:border-paper" aria-label="Producto anterior">
@@ -221,7 +223,7 @@ function HeroCarousel({ products, index, onSelect }: { products: Product[]; inde
       </div>
       <div
         ref={track}
-        className="no-scrollbar mx-auto flex max-w-[1600px] snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-6 md:px-8"
+        className="no-scrollbar mx-auto flex max-w-[1600px] snap-x snap-mandatory scroll-px-4 gap-3 overflow-x-auto px-4 pb-6 md:scroll-px-8 md:px-8"
         role="listbox"
         aria-label="Productos destacados"
         onWheel={(e) => {
@@ -243,7 +245,7 @@ function HeroCarousel({ products, index, onSelect }: { products: Product[]; inde
               onClick={() => select(i)}
               onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), select(i))}
               className={cn(
-                "group relative flex w-[78%] shrink-0 snap-start cursor-pointer flex-col border bg-coal p-4 transition-all duration-300 [perspective:800px] sm:w-[46%] lg:w-[calc(25%-9px)]",
+                "group relative flex w-[78%] shrink-0 snap-start cursor-pointer flex-col border bg-coal p-3.5 transition-all duration-300 [perspective:800px] sm:w-[46%] lg:w-[calc(25%-9px)]",
                 active ? "border-paper/60 bg-graphite" : "border-line hover:border-paper/30",
               )}
             >
@@ -251,8 +253,8 @@ function HeroCarousel({ products, index, onSelect }: { products: Product[]; inde
                 <ProductFlags product={p} />
                 <AvailabilityBadge status={productAvailability(p)} />
               </div>
-              <div className="relative my-2 h-32 transition-transform duration-500 group-hover:[transform:rotateX(8deg)_rotateY(-10deg)_translateZ(20px)] md:h-36">
-                {p.images[0] && <Image src={p.images[0].url} alt={p.images[0].alt} fill sizes="(max-width: 640px) 78vw, 25vw" className="object-contain" />}
+              <div className="relative my-1 h-28 transition-transform duration-500 group-hover:[transform:rotateX(8deg)_rotateY(-10deg)_translateZ(20px)] lg:h-24 xl:h-28">
+                {p.images[0] ? <Image src={p.images[0].url} alt={p.images[0].alt} fill sizes="(max-width: 640px) 78vw, 25vw" className="object-contain" /> : <NoPhoto brand={p.brand.name} compact />}
               </div>
               <div className="flex items-end justify-between gap-3">
                 <div className="min-w-0">

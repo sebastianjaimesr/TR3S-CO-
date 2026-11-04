@@ -23,7 +23,6 @@ export function serverEnv() {
   }
   return {
     supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY ?? "",
-    wompiPrivateKey: process.env.WOMPI_PRIVATE_KEY ?? "",
     wompiIntegritySecret: process.env.WOMPI_INTEGRITY_SECRET ?? "",
     wompiEventsSecret: process.env.WOMPI_EVENTS_SECRET ?? "",
     wompiEnv: (process.env.WOMPI_ENV === "production" ? "production" : "sandbox") as

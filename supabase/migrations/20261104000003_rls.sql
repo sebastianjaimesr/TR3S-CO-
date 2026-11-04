@@ -85,3 +85,6 @@ revoke update on orders from authenticated;
 grant update (staff_notes) on orders to authenticated;
 revoke insert, delete on orders, order_items, payments, inventory, inventory_movements, supplier_confirmations, shipments, order_events, webhook_events, audit_logs from anon, authenticated;
 revoke update on inventory, order_items, payments, inventory_movements, audit_logs from anon, authenticated;
+
+-- Hardening: RLS does not apply to TRUNCATE/TRIGGER/REFERENCES; API roles never need them.
+revoke truncate, trigger, references on all tables in schema public from anon, authenticated;

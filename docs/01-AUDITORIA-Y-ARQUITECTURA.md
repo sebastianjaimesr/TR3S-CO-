@@ -71,11 +71,14 @@ lib/                  utilidades (formato COP, env, supabase clients, seo)
 services/             acceso a datos (catalog, orders, inventory, suppliers, payments/wompi, whatsapp)
 validations/          esquemas zod compartidos cliente/servidor
 types/                tipos de dominio
+supabase/
+  migrations/         SQL (tablas, índices, RLS, funciones, storage) — aplicables con `supabase db push`
+  config.toml         stack local de Supabase
 database/
-  migrations/         SQL (tablas, índices, RLS, funciones)
   seed/               catálogo DEMO
+  test-support/       stubs para correr las pruebas SQL en Postgres plano
 tests/                unitarios (vitest), SQL y e2e (playwright)
-public/brand/         logo (provisional hasta recibir el original)
+public/brand/         logo original de TR3S & CO. (sin alterar)
 docs/
 ```
 

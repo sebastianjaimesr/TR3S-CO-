@@ -12,9 +12,12 @@ const safeNext = (n: FormDataEntryValue | null) => {
 };
 
 export async function signIn(_: unknown, form: FormData): Promise<{ error?: string; info?: string }> {
-  if (!rateLimit(`login:${await clientIp()}`, 10, 10 * 60_000).ok) return { error: "Demasiados intentos. Espera unos minutos." };
   const p = creds.safeParse({ email: form.get("email"), password: form.get("password") });
   if (!p.success) return { error: "Correo o contraseña inválidos." };
+  // Brute-force guard per account and per IP (a shared office IP still gets room).
+  const ip = await clientIp();
+  if (!rateLimit(`login:${ip}:${p.data.email}`, 8, 10 * 60_000).ok || !rateLimit(`login:${ip}`, 40, 10 * 60_000).ok)
+    return { error: "Demasiados intentos. Espera unos minutos." };
   const sb = await supabaseServer();
   if (!sb) return { error: "La autenticación se habilita al conectar Supabase." };
   const { error } = await sb.auth.signInWithPassword(p.data);
@@ -28,8 +31,10 @@ export async function signUp(_: unknown, form: FormData): Promise<{ error?: stri
   if (!p.success) return { error: p.error.issues[0]?.message ?? "Datos inválidos." };
   const sb = await supabaseServer();
   if (!sb) return { error: "La autenticación se habilita al conectar Supabase." };
-  const { error } = await sb.auth.signUp({ ...p.data, options: { emailRedirectTo: `${publicEnv.siteUrl}/auth/callback` } });
+  const { data, error } = await sb.auth.signUp({ ...p.data, options: { emailRedirectTo: `${publicEnv.siteUrl}/auth/callback` } });
   if (error) return { error: "No pudimos crear la cuenta." };
+  // Email confirmation disabled in the project: the user already has a session.
+  if (data.session) redirect(safeNext(form.get("next")));
   return { info: "Te enviamos un correo para confirmar tu cuenta." };
 }
 

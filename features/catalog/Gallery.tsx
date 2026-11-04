@@ -1,4 +1,5 @@
 "use client";
+import { NoPhoto } from "@/features/catalog/bits";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useEffect, useState } from "react";
@@ -37,6 +38,7 @@ export function Gallery({ product }: { product: Product }) {
               }}
               onMouseLeave={() => setZoom(null)}
             >
+              {!img && <NoPhoto brand={product.brand.name} />}
               {img && (
                 <Image
                   src={img.url}

@@ -4,6 +4,8 @@ import { supabaseServer } from "@/lib/supabase/server";
 import { isSupabaseConfigured, isWompiConfigured, publicEnv, serverEnv } from "@/lib/env";
 import { buildCheckoutUrl } from "@/services/payments/wompi";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
+import { revalidateTag } from "next/cache";
+import { CATALOG_TAG } from "@/services/catalog";
 
 export type PlaceOrderResult =
   | { ok: true; redirectUrl: string; orderNumber: string }
@@ -54,6 +56,8 @@ export async function placeOrder(input: CheckoutInput): Promise<PlaceOrderResult
     return { ok: false, error: checkoutErrorMessage(error.message) };
   }
   const order = data as { order_id: string; number: string; total: number };
+  // Stock was reserved: refresh cached availability so the storefront never offers it twice.
+  revalidateTag(CATALOG_TAG);
   const resultUrl = `${publicEnv.siteUrl}/checkout/result?order=${encodeURIComponent(order.number)}`;
 
   if (d.paymentMethod === "transfer") {
