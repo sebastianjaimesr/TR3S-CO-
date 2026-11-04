@@ -2,6 +2,8 @@ export type Gender = "men" | "women" | "unisex";
 
 export type AvailabilityStatus = "available_now" | "available_on_order" | "sold_out";
 
+export type PaymentMethodId = "wompi" | "mercadopago" | "payu" | "transfer";
+
 export type FulfillmentType = "own" | "on_order";
 
 export interface Brand {
@@ -99,7 +101,8 @@ export interface StoreSettings {
   shippingFlatRate: number;
   freeShippingFrom: number | null;
   bankTransferInstructions: string | null;
-  paymentMethods: { wompi: boolean; transfer: boolean };
+  paymentMethods: Record<PaymentMethodId, boolean>;
+  storeDescription: string | null;
   contactEmail: string | null;
   contactPhone: string | null;
   address: string | null;

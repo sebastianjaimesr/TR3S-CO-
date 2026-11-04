@@ -22,7 +22,7 @@ export const checkoutSchema = z.object({
   city: z.string().trim().min(2).max(60),
   address: z.string().trim().min(5, "Dirección incompleta").max(160),
   addressNotes: z.string().trim().max(200).optional().default(""),
-  paymentMethod: z.enum(["wompi", "transfer"]),
+  paymentMethod: z.enum(["wompi", "mercadopago", "payu", "transfer"], { message: "Elige un método de pago" }),
   couponCode: z.string().trim().toUpperCase().max(30).optional().default(""),
   acceptPolicies: z.literal(true, { message: "Debes aceptar las políticas" }),
   idempotencyKey: z.string().min(16).max(80),
@@ -34,6 +34,11 @@ export const checkoutSchema = z.object({
 
 export type CheckoutInput = z.input<typeof checkoutSchema>;
 export type CheckoutData = z.output<typeof checkoutSchema>;
+
+export const orderAccessSchema = z.object({
+  number: z.string().trim().toUpperCase().regex(/^T3-\d{6}-\d+$/),
+  token: z.string().regex(/^[a-f0-9]{32,128}$/),
+});
 
 export const trackOrderSchema = z.object({
   number: z.string().trim().toUpperCase().regex(/^T3-\d{6}-\d+$/, "Formato: T3-AAMMDD-0000"),
@@ -48,5 +53,11 @@ export function checkoutErrorMessage(raw: string): string {
   if (raw.includes("INVALID_COUPON")) return "El cupón no es válido o no aplica a este pedido.";
   if (raw.includes("PAYMENT_METHOD_DISABLED")) return "Ese método de pago no está habilitado.";
   if (raw.includes("EMPTY_CART")) return "Tu carrito está vacío.";
+  if (raw.includes("SHIPPING_QUOTE_PENDING")) return "Primero debemos cotizar tu envío y tú aceptarlo. Te avisaremos.";
+  if (raw.includes("ORDER_ALREADY_PAID")) return "Este pedido ya está pagado.";
+  if (raw.includes("RESERVATION_EXPIRED")) return "La reserva de este pedido venció. Haz el pedido de nuevo.";
+  if (raw.includes("ORDER_NOT_PAYABLE")) return "Este pedido ya no admite pagos.";
+  if (raw.includes("QUOTE_NOT_READY")) return "La cotización del envío aún no está lista.";
+  if (raw.includes("ORDER_NOT_FOUND")) return "No encontramos el pedido.";
   return "No pudimos crear tu pedido. Intenta de nuevo o escríbenos por WhatsApp.";
 }

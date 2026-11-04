@@ -9,6 +9,7 @@ import { formatCOP } from "@/lib/format";
 import { availabilityLabel } from "@/services/availability";
 import { cartSummaryMessage, whatsappLink } from "@/services/whatsapp";
 import { useHydrated } from "@/hooks/useHydrated";
+import { EmptyCart } from "@/features/cart/EmptyCart";
 
 export function CartDrawer({ whatsappNumber, shippingFlatRate, freeShippingFrom }: { whatsappNumber: string | null; shippingFlatRate: number; freeShippingFrom: number | null }) {
   const { items, open, setOpen, remove, setQuantity } = useCart();
@@ -53,10 +54,7 @@ export function CartDrawer({ whatsappNumber, shippingFlatRate, freeShippingFrom 
               </button>
             </div>
             {items.length === 0 ? (
-              <div className="flex flex-1 flex-col items-center justify-center gap-6 px-8 text-center">
-                <p className="font-display text-2xl">Tu carrito está vacío.</p>
-                <Link href="/shop" onClick={() => setOpen(false)} className="btn btn-primary">Explorar la tienda</Link>
-              </div>
+              <EmptyCart compact onNavigate={() => setOpen(false)} />
             ) : (
               <>
                 <ul className="flex-1 divide-y divide-line overflow-y-auto">
@@ -95,9 +93,9 @@ export function CartDrawer({ whatsappNumber, shippingFlatRate, freeShippingFrom 
                   ))}
                 </ul>
                 <div className="space-y-3 border-t border-line p-5">
-                  <Row label="Subtotal" value={formatCOP(t.subtotal)} />
-                  <Row label="Envío estimado" value={t.shipping === 0 ? "Gratis" : formatCOP(t.shipping)} />
-                  <Row label="Total" value={formatCOP(t.total)} strong />
+                  {t.savings > 0 && <Row label="Ahorras" value={`−${formatCOP(t.savings)}`} />}
+                  <Row label="Envío" value="Se calcula en el checkout" />
+                  <Row label="Subtotal estimado" value={formatCOP(t.subtotal)} strong />
                   {hasDemo && (
                     <p className="border border-crimson/40 bg-wine/10 p-3 text-xs text-bone/80">
                       Los productos DEMO son de demostración y no se pueden comprar. Elimínalos para continuar.

@@ -10,9 +10,13 @@ import type { AvailabilityStatus } from "@/types/domain";
 
 export const CATALOG_TAG = "catalog";
 
-/** True when the storefront is running on the DEMO catalog (no database configured). */
+/**
+ * DEMO catalog: fictitious products used only for local development, and only
+ * when explicitly requested with NEXT_PUBLIC_DEMO_CATALOG=1 and no database.
+ * By default the storefront shows the real (possibly empty) catalog.
+ */
 export function isDemoMode() {
-  return !isSupabaseConfigured();
+  return !isSupabaseConfigured() && process.env.NEXT_PUBLIC_DEMO_CATALOG === "1";
 }
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -78,7 +82,7 @@ const PRODUCT_SELECT =
 const fetchAllProducts = unstable_cache(
   async (): Promise<Product[]> => {
     const sb = supabasePublic();
-    if (!sb) return demoProducts;
+    if (!sb) return isDemoMode() ? demoProducts : [];
     const { data, error } = await sb
       .from("products")
       .select(PRODUCT_SELECT)
@@ -109,7 +113,7 @@ export const getAllProducts = cache(fetchAllProducts);
 
 export async function searchProducts(filters: CatalogFilters) {
   const all = await getAllProducts();
-  return { ...filterProducts(all, filters), facets: catalogFacets(all) };
+  return { ...filterProducts(all, filters), facets: catalogFacets(all), catalogSize: all.length };
 }
 
 export async function getProductBySlug(slug: string): Promise<Product | null> {
@@ -130,7 +134,7 @@ export async function getRelatedProducts(product: Product, limit = 4): Promise<P
 export const getBrands = unstable_cache(
   async (): Promise<Brand[]> => {
     const sb = supabasePublic();
-    if (!sb) return demoBrands;
+    if (!sb) return isDemoMode() ? demoBrands : [];
     const { data, error } = await sb.from("brands").select("*").eq("is_active", true).order("name");
     if (error) throw new Error(error.message);
     return (data ?? []).map(mapBrand);
@@ -163,7 +167,13 @@ export const getStoreSettings = unstable_cache(
       shippingFlatRate: data.shipping_flat_rate,
       freeShippingFrom: data.free_shipping_from,
       bankTransferInstructions: data.bank_transfer_instructions,
-      paymentMethods: { wompi: data.payment_wompi_enabled, transfer: data.payment_transfer_enabled },
+      paymentMethods: {
+        wompi: data.payment_wompi_enabled,
+        mercadopago: data.payment_mercadopago_enabled ?? false,
+        payu: data.payment_payu_enabled ?? false,
+        transfer: data.payment_transfer_enabled,
+      },
+      storeDescription: data.store_description ?? null,
       contactEmail: data.contact_email,
       contactPhone: data.contact_phone,
       address: data.address,
