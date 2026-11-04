@@ -1,11 +1,12 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Space_Grotesk, Instrument_Serif } from "next/font/google";
+import { Anton, Inter, Space_Grotesk, Instrument_Serif } from "next/font/google";
 import "./globals.css";
 import { publicEnv } from "@/lib/env";
 import { site } from "@/lib/site";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
 const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-space-grotesk", display: "swap" });
+const anton = Anton({ subsets: ["latin"], weight: "400", variable: "--font-anton", display: "swap" });
 const instrumentSerif = Instrument_Serif({
   subsets: ["latin"],
   weight: "400",
@@ -16,7 +17,7 @@ const instrumentSerif = Instrument_Serif({
 
 export const metadata: Metadata = {
   metadataBase: new URL(publicEnv.siteUrl),
-  title: { default: `${site.name} — Sneakers y calzado multimarca en Bucaramanga`, template: `%s | ${site.name}` },
+  title: { default: `${site.name} — Sneakers, calzado deportivo y urbano en Colombia`, template: `%s | ${site.name}` },
   description: site.description,
   applicationName: site.name,
   openGraph: {
@@ -30,14 +31,14 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#080808",
+  themeColor: "#000000",
   width: "device-width",
   initialScale: 1,
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="es-CO" className={`${inter.variable} ${spaceGrotesk.variable} ${instrumentSerif.variable}`}>
+    <html lang="es-CO" className={`${inter.variable} ${spaceGrotesk.variable} ${instrumentSerif.variable} ${anton.variable}`}>
       <body className="antialiased">{children}</body>
     </html>
   );

@@ -45,7 +45,7 @@ export function Hero({ campaign, products }: { campaign: HeroCampaign; products:
     return (
       <section className="grid min-h-[70svh] place-items-center px-4 text-center">
         <div>
-          <h1 className="font-display text-5xl font-bold md:text-7xl">{campaign.headline.join(" ")}</h1>
+          <h2 className="font-display text-5xl font-bold md:text-7xl">{campaign.headline.join(" ")}</h2>
           <p className="mt-4 text-smoke">Pronto publicaremos nuestro catálogo.</p>
         </div>
       </section>
@@ -69,11 +69,11 @@ export function Hero({ campaign, products }: { campaign: HeroCampaign; products:
         {/* LEFT: campaign copy */}
         <div className="relative z-10 lg:col-span-3 lg:flex lg:flex-col lg:justify-center">
           <p className="eyebrow mb-4">TR3S &amp; CO. · Multimarca</p>
-          <h1 className="font-display text-[13vw] font-bold leading-[0.88] tracking-[-0.04em] text-paper sm:text-6xl xl:text-7xl">
+          <h2 className="font-display text-[13vw] font-bold leading-[0.88] tracking-[-0.04em] text-paper sm:text-6xl xl:text-7xl">
             {campaign.headline.map((l) => (
               <span key={l} className="block">{l}</span>
             ))}
-          </h1>
+          </h2>
           <p className="mt-5 font-editorial text-xl italic text-bone/80 md:text-2xl">{campaign.subheadline}</p>
         </div>
 

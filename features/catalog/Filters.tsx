@@ -199,7 +199,7 @@ function Group({ title, children }: { title: string; children: React.ReactNode }
 function Check({ label, checked, onChange }: { label: string; checked: boolean; onChange: () => void }) {
   return (
     <label className="flex cursor-pointer items-center gap-3 text-sm text-bone/80 hover:text-paper">
-      <input type="checkbox" checked={checked} onChange={onChange} className="h-4 w-4 accent-[#a52632]" />
+      <input type="checkbox" checked={checked} onChange={onChange} className="h-4 w-4 accent-[#d0142c]" />
       <span className="capitalize">{label}</span>
     </label>
   );

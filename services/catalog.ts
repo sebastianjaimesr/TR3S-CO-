@@ -7,6 +7,7 @@ import { isSupabaseConfigured, publicEnv } from "@/lib/env";
 import { demoBrands, demoCampaign, demoProducts, demoSettings, categories as demoCategories } from "@/database/seed/demo-catalog";
 import { catalogFacets, filterProducts } from "@/services/catalog-filter";
 import type { AvailabilityStatus } from "@/types/domain";
+import type { HomeMedia } from "@/lib/home-media";
 
 export const CATALOG_TAG = "catalog";
 
@@ -39,6 +40,7 @@ function mapProduct(row: any, avail: Map<string, any>): Product {
     price: row.price,
     compareAtPrice: row.compare_at_price,
     isNew: row.is_new,
+    featuredRank: row.featured_rank ?? null,
     isActive: row.is_active,
     isDemo: row.is_demo,
     modelUrl: row.model_url,
@@ -230,3 +232,16 @@ export async function getHeroData(): Promise<HeroData> {
   }
   return { campaign, products };
 }
+
+/** Owner-uploaded home photos (hero, categories, banner, story). Empty until uploaded in /admin/home. */
+export const getHomeMedia = unstable_cache(
+  async (): Promise<HomeMedia> => {
+    const sb = supabasePublic();
+    if (!sb) return {};
+    const { data, error } = await sb.from("home_media").select("slot, image_url, alt");
+    if (error || !data) return {};
+    return Object.fromEntries(data.filter((m) => m.image_url).map((m) => [m.slot, { url: m.image_url as string, alt: (m.alt as string) ?? "" }])) as HomeMedia;
+  },
+  ["home-media"],
+  { revalidate: 60, tags: [CATALOG_TAG] },
+);

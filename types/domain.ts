@@ -76,6 +76,8 @@ export interface Product {
   /** Real previous price; only set when a real discount exists. */
   compareAtPrice: number | null;
   isNew: boolean;
+  /** Manual merchandising rank (lower first); null when not featured. */
+  featuredRank?: number | null;
   isActive: boolean;
   /** DEMO products can never be purchased. */
   isDemo: boolean;

@@ -3,7 +3,8 @@ export const site = {
   descriptor: "ESENCIA · ESTILO · VISAJE",
   slogan: "TRES ALMAS UNA ESENCIA",
   description:
-    "TR3S & CO. es una tienda multimarca de calzado en Bucaramanga, Colombia. Sneakers, running, casual y formal para hombre y mujer, con inventario propio y venta bajo pedido.",
+    "TR3S & CO. es una tienda multimarca de calzado deportivo y urbano en Bucaramanga, Colombia. Sneakers, running, streetwear y casual para hombre y mujer, con envíos a todo el país.",
+  concept: "Tres amigos, tres personalidades y una misma esencia: el estilo urbano, la cultura sneaker y la moda deportiva.",
   city: "Bucaramanga, Santander, Colombia",
   logo: {
     original: "/brand/tr3s-logo-original.png",
@@ -43,7 +44,16 @@ export const mainNav: NavItem[] = [
       { label: "Formal", href: "/women?category=formal" },
     ],
   },
-  { label: "SNEAKERS", href: "/sneakers" },
+  {
+    label: "SNEAKERS",
+    href: "/sneakers",
+    children: [
+      { label: "Todos los sneakers", href: "/sneakers" },
+      { label: "Streetwear", href: "/streetwear" },
+      { label: "Lifestyle", href: "/sneakers?category=lifestyle" },
+      { label: "Casual", href: "/sneakers?category=casual" },
+    ],
+  },
   {
     label: "SPORTS",
     href: "/sports",
