@@ -148,7 +148,9 @@ test("cliente: compra stock propio por transferencia", async ({ page }) => {
   await page.waitForURL((u) => u.pathname === "/checkout");
   await fillCheckout(page, "transfer");
   await page.waitForURL(/\/checkout\/result\?order=/);
-  await expect(page.getByRole("heading", { name: /Gracias por comprar/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Tu pedido está reservado/ })).toBeVisible();
+  // the order page needs its secret token; without it nothing is shown
+  expect(new URL(page.url()).searchParams.get("t")).toMatch(/^[a-f0-9]{64}$/);
   transferOrder = new URL(page.url()).searchParams.get("order")!;
   expect(transferOrder).toMatch(/^T3-\d{6}-\d+$/);
   await expect(page.getByText("Bancolombia ahorros")).toBeVisible();
@@ -174,11 +176,13 @@ test("staff: confirma transferencia, despacha y entrega; cliente rastrea", async
   expect(sql(`select status from orders where number = '${transferOrder}'`)).toBe("preparing");
   expect(sql(`select i.quantity || '/' || i.reserved from inventory i join product_variants v on v.id = i.variant_id where v.sku = '${ref}-NEGRO-40'`)).toBe("0/0");
 
-  const ship = formWith(page, "Marcar despachado");
+  const ship = formWith(page, "Actualizar envío");
+  await ship.locator('[name="status"]').selectOption("dispatched");
   await ship.locator('[name="carrier"]').fill("Servientrega");
   await ship.locator('[name="tracking"]').fill(`GUIA${run}`);
-  await ship.getByRole("button", { name: "Marcar despachado" }).click();
-  await expect(page.getByText("Despacho registrado.")).toBeVisible();
+  await ship.getByRole("button", { name: "Actualizar envío" }).click();
+  await expect(page.getByText("Envío actualizado.")).toBeVisible();
+  expect(sql(`select status from orders where number = '${transferOrder}'`)).toBe("shipped");
 
   const st = formWith(page, "Aplicar");
   await st.locator('[name="status"]').selectOption("delivered");

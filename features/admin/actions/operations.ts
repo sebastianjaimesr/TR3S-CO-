@@ -3,6 +3,7 @@ import { requireStaff } from "@/lib/auth";
 import { supabaseService } from "@/lib/supabase/server";
 import { slugify } from "@/lib/format";
 import { normalizeWhatsappNumber } from "@/services/whatsapp";
+import { PAYU_IMPLEMENTED } from "@/services/payments/payu";
 import { bool, dbError, done, fail, int, optStr, refreshCatalog, str } from "@/features/admin/actions/common";
 
 /* ------------------------------- Brands -------------------------------- */
@@ -196,7 +197,13 @@ export async function saveSettings(form: FormData) {
       free_shipping_from: int(form, "free_shipping_from"),
       bank_transfer_instructions: optStr(form, "bank_transfer_instructions"),
       payment_wompi_enabled: bool(form, "payment_wompi_enabled"),
+      payment_mercadopago_enabled: bool(form, "payment_mercadopago_enabled"),
+      // PayU stays off until its integration is finished (see services/payments/payu.ts)
+      payment_payu_enabled: PAYU_IMPLEMENTED ? bool(form, "payment_payu_enabled") : false,
       payment_transfer_enabled: bool(form, "payment_transfer_enabled"),
+      shipping_unmatched_mode: str(form, "shipping_unmatched_mode") === "quote" ? "quote" : "flat",
+      quote_reservation_hours: Math.min(168, Math.max(24, int(form, "quote_reservation_hours") ?? 72)),
+      store_description: optStr(form, "store_description"),
       supplier_confirmation_max_age_days: int(form, "supplier_confirmation_max_age_days") ?? 7,
       low_stock_threshold: int(form, "low_stock_threshold") ?? 2,
       contact_email: optStr(form, "contact_email"),
