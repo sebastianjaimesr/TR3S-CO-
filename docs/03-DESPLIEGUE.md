@@ -2,7 +2,7 @@
 
 Guía para publicar TR3S & CO. con **Supabase** (base de datos, usuarios y fotos) y **Vercel** (la web). Ambos tienen plan gratuito suficiente para empezar; el costo real inicial es el dominio y, cuando crezcan las ventas, Supabase Pro (≈ USD 25/mes) por los backups diarios.
 
-Orden recomendado: Supabase → Vercel → primer admin → configuración de la tienda → Wompi en pruebas → catálogo real → Wompi producción → dominio.
+Orden recomendado: Supabase → Vercel → primer admin → configuración de la tienda → zonas de envío → Wompi y Mercado Pago en pruebas → catálogo real → producción → dominio.
 
 ## 1. Supabase
 
@@ -17,7 +17,9 @@ Orden recomendado: Supabase → Vercel → primer admin → configuración de la
    npx supabase db push            # aplica supabase/migrations/*.sql en orden
    ```
 
-   Alternativa sin CLI: en **SQL Editor**, ejecuta los 4 archivos de `supabase/migrations/` en orden numérico.
+   Alternativa sin CLI: en **SQL Editor**, ejecuta los archivos de `supabase/migrations/` en orden numérico.
+
+   > **Fase 3:** la migración `20261105000001_payments_shipping.sql` (pagos múltiples, estados separados, envíos manuales, cotizaciones, token de acceso al pedido, fotos del inicio) debe aplicarse **antes o junto con** el despliegue del código que la usa. Es aditiva: no borra datos.
 3. **Authentication → URL Configuration:**
    - *Site URL*: `https://tu-dominio.com`
    - *Redirect URLs*: `https://tu-dominio.com/auth/callback` y, mientras pruebas, `https://*.vercel.app/auth/callback`.
@@ -35,11 +37,17 @@ Orden recomendado: Supabase → Vercel → primer admin → configuración de la
    | `NEXT_PUBLIC_SUPABASE_URL` | Project URL | todos |
    | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | anon public | todos |
    | `SUPABASE_SERVICE_ROLE_KEY` | service_role | todos (**secreta**) |
-   | `NEXT_PUBLIC_WOMPI_PUBLIC_KEY` | `pub_test_…` → luego `pub_prod_…` | todos |
+   | `WOMPI_PUBLIC_KEY` | `pub_test_…` → luego `pub_prod_…` | todos |
    | `WOMPI_INTEGRITY_SECRET` | `test_integrity_…` → luego `prod_integrity_…` | todos (**secreta**) |
    | `WOMPI_EVENTS_SECRET` | `test_events_…` → luego `prod_events_…` | todos (**secreta**) |
-   | `WOMPI_ENV` | `sandbox` → luego `production` | todos |
+   | `WOMPI_ENVIRONMENT` | `sandbox` → luego `production` | todos |
+   | `MERCADOPAGO_ACCESS_TOKEN` | access token de prueba → producción | todos (**secreta**) |
+   | `MERCADOPAGO_WEBHOOK_SECRET` | clave secreta de Webhooks | todos (**secreta**) |
+   | `MERCADOPAGO_ENVIRONMENT` | `sandbox` → luego `production` | todos |
+   | `PAYU_*` | vacías por ahora (PayU está preparado, no activo) | — |
    | `NEXT_PUBLIC_GA4_ID` / `NEXT_PUBLIC_META_PIXEL_ID` | opcionales | Production |
+
+   `NEXT_PUBLIC_DEMO_CATALOG` **no** se configura en Vercel: es solo para desarrollo sin base de datos.
 
 3. *Deploy*. Cada cambio de variables necesita un nuevo deploy (*Deployments → Redeploy*).
 
@@ -75,12 +83,13 @@ Orden recomendado: Supabase → Vercel → primer admin → configuración de la
 ## 6. Wompi
 
 1. Crea la cuenta de comercio en <https://comercios.wompi.co> y completa la verificación.
-2. *Desarrolladores → Llaves*: copia las llaves de **pruebas** (pública, integridad y eventos) a Vercel con `WOMPI_ENV=sandbox`.
+2. *Desarrolladores → Llaves*: copia las llaves de **pruebas** (pública, integridad y eventos) a Vercel con `WOMPI_ENVIRONMENT=sandbox`. Si el prefijo de la llave no coincide con el entorno, el panel lo avisa y Wompi no se ofrece.
 3. *Desarrolladores → URL de eventos*: `https://tu-dominio.com/api/webhooks/wompi` (configúrala tanto en pruebas como en producción).
 4. Haz compras de prueba con los datos de prueba de Wompi (tarjeta aprobada y rechazada, Nequi, PSE). Verifica en `/admin/orders` que:
    - la aprobada pasa a *En preparación* (o *Esperando proveedor* si lleva ítems bajo pedido);
    - la rechazada queda registrada en el historial y el pedido sigue pendiente para que el cliente reintente; si no paga en 60 minutos, el pedido se cancela y el stock se libera.
-5. Para salir a producción, reemplaza las tres llaves por las de producción y cambia `WOMPI_ENV=production`. Redeploy.
+5. Para salir a producción, reemplaza las tres llaves por las de producción y cambia `WOMPI_ENVIRONMENT=production`. Redeploy.
+6. En `/admin/settings` → *Pasarelas de pago*, activa Wompi. En `/admin/payments` verás cada evento recibido (procesado, ignorado, rechazado o con error).
 
 **Cómo se valida un pago:**
 - El monto y la referencia van firmados (firma de integridad SHA-256) para que no se puedan alterar en el navegador.
@@ -88,6 +97,30 @@ Orden recomendado: Supabase → Vercel → primer admin → configuración de la
 - La página de resultado consulta la transacción directamente a Wompi.
 - Si el monto pagado no coincide con el pedido, o el pago llega después de vencida la reserva, el pedido queda en **Incidencia** para revisión humana.
 - No se almacenan datos de tarjetas.
+
+## 6b. Mercado Pago (Checkout Pro)
+
+1. En <https://www.mercadopago.com.co/developers> → *Tus integraciones* → crea una aplicación (producto: **Checkout Pro**, pagos online).
+2. *Credenciales de prueba*: copia el **Access token** a `MERCADOPAGO_ACCESS_TOKEN` y deja `MERCADOPAGO_ENVIRONMENT=sandbox`.
+3. *Webhooks* → *Configurar notificaciones*:
+   - URL (modo prueba y producción): `https://tu-dominio.com/api/webhooks/mercadopago`
+   - Evento: **Pagos** (`payment`).
+   - Copia la **clave secreta** a `MERCADOPAGO_WEBHOOK_SECRET`.
+4. Redeploy y activa Mercado Pago en `/admin/settings`.
+5. Prueba con un **usuario comprador de prueba** y las tarjetas de prueba de Mercado Pago (aprobada, rechazada, pendiente). Verifica en `/admin/payments` y en el pedido.
+6. Producción: cambia a las credenciales de producción (`APP_USR-…`), `MERCADOPAGO_ENVIRONMENT=production`, redeploy.
+
+**Cómo se valida:** cada notificación se verifica con la firma `x-signature` (HMAC-SHA256 con la clave secreta). Luego el servidor **consulta el pago a la API de Mercado Pago** y aplica solo el estado, monto, moneda y referencia que devuelve la API. Volver al sitio desde Mercado Pago nunca marca un pedido como pagado por sí solo.
+
+## 6c. PayU (preparado, no activo)
+
+El proveedor existe en el código, la base de datos y el panel, con las firmas MD5 implementadas y probadas, pero **no está terminado**: falta el formulario de WebCheckout y la página de confirmación. El panel no permite activarlo. Cuando se quiera habilitar, se completa `services/payments/payu.ts` y se prueba con las credenciales de sandbox de PayU.
+
+## 6d. Envíos manuales
+
+En `/admin/shipping` → *Zonas y tarifas* crea las zonas: ciudad (p. ej. Bucaramanga), departamento o "resto del país". Para cada una: tarifa, envío gratis desde, tiempo estimado y si **requiere cotización manual**. Si ninguna zona aplica se usa la tarifa general de `/admin/settings` o, si así lo eliges, cotización manual.
+
+Con cotización: el pedido se crea **sin cobrar**, reserva el stock (horas configurables) y aparece en *Pendientes de cotización*. Registras el valor en el pedido y el cliente lo acepta y paga desde el enlace privado de su pedido.
 
 ## 7. Reservas vencidas
 
@@ -118,6 +151,13 @@ select cron.schedule('expire-reservations', '*/15 * * * *', $$select public.expi
 - Vercel guarda cada deploy; *Deployments → Promote to Production* revierte a una versión anterior en segundos.
 
 ## 10. Lista de verificación antes de abrir
+
+- [ ] Migración de Fase 3 aplicada en Supabase.
+- [ ] Zonas de envío y tarifa general revisadas.
+- [ ] Al menos una pasarela probada en sandbox de punta a punta (aprobado, rechazado, reintento) y luego en producción con un pago real pequeño.
+- [ ] URLs de webhook configuradas en Wompi y Mercado Pago con el dominio final.
+- [ ] Fotos propias cargadas en `/admin/home` (o se mantienen los paneles gráficos).
+
 
 - [ ] Migraciones aplicadas y primer admin creado.
 - [ ] Configuración completa: WhatsApp, envío, transferencia, métodos de pago.
