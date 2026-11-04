@@ -6,7 +6,11 @@ DB=${TEST_DB:-tr3s_test}
 psql -q -v ON_ERROR_STOP=1 -d postgres -c "drop database if exists $DB" -c "create database $DB"
 run() { psql -q -v ON_ERROR_STOP=1 -d "$DB" -f "$1"; }
 run database/test-support/supabase-stub.sql
-for f in supabase/migrations/2026110400000[1-3]_*.sql; do run "$f"; done
+# 0004 (storage) needs the Supabase storage schema and is skipped here.
+for f in supabase/migrations/*.sql; do
+  case "$f" in *_storage.sql) continue ;; esac
+  run "$f"
+done
 run database/test-support/grants.sql
 for t in tests/sql/*.sql; do echo "== $t"; run "$t"; done
 echo "== tests/sql/concurrency.sh"; TEST_DB=$DB tests/sql/concurrency.sh
