@@ -4,12 +4,13 @@ import { useState } from "react";
 import { supabaseBrowser } from "@/lib/supabase/browser";
 import { PRODUCT_VIEWS } from "@/lib/product-views";
 import { registerImages, registerModel } from "@/features/admin/actions/products";
+import { registerHomeMedia } from "@/features/admin/actions/commerce";
 
 const MAX_BYTES = 5 * 1024 * 1024; // bucket limit
 const MAX_SIDE = 2800;
 
 /** Downscale only when needed (over the bucket limit or larger than MAX_SIDE). Keeps full quality otherwise. */
-async function prepare(file: File): Promise<Blob> {
+export async function prepare(file: File): Promise<Blob> {
   const bmp = await createImageBitmap(file);
   const longest = Math.max(bmp.width, bmp.height);
   if (file.size <= MAX_BYTES && longest <= MAX_SIDE) return file;
@@ -144,6 +145,143 @@ export function ModelUploader({ productId, current }: { productId: string; curre
       </div>
       {current && <p className="mt-2 truncate text-xs text-smoke">Actual: {current}</p>}
       {msg && <p role="status" className={msg.ok ? "mt-2 text-sm text-bone" : "mt-2 text-sm text-crimson"}>{msg.text}</p>}
+    </div>
+  );
+}
+
+/** True when the image's border is transparent (a cut-out product photo). */
+async function hasTransparentEdges(file: File): Promise<boolean> {
+  if (!/png|webp|avif/.test(file.type)) return false;
+  const bmp = await createImageBitmap(file);
+  const c = document.createElement("canvas");
+  c.width = 64;
+  c.height = 64;
+  const ctx = c.getContext("2d")!;
+  ctx.drawImage(bmp, 0, 0, 64, 64);
+  const d = ctx.getImageData(0, 0, 64, 64).data;
+  let clear = 0;
+  let total = 0;
+  for (let i = 0; i < 64; i++) {
+    for (const [x, y] of [[i, 0], [i, 63], [0, i], [63, i]]) {
+      total++;
+      if (d[(y * 64 + x) * 4 + 3] < 16) clear++;
+    }
+  }
+  return clear / total > 0.9;
+}
+
+/** Crops the transparent margins of a cut-out so the sole sits exactly on the pedestal. */
+async function trimTransparent(file: File): Promise<File> {
+  const bmp = await createImageBitmap(file);
+  const c = document.createElement("canvas");
+  c.width = bmp.width;
+  c.height = bmp.height;
+  const ctx = c.getContext("2d")!;
+  ctx.drawImage(bmp, 0, 0);
+  const d = ctx.getImageData(0, 0, c.width, c.height).data;
+  let x0 = c.width, y0 = c.height, x1 = -1, y1 = -1;
+  for (let y = 0; y < c.height; y++) {
+    for (let x = 0; x < c.width; x++) {
+      if (d[(y * c.width + x) * 4 + 3] > 12) {
+        if (x < x0) x0 = x;
+        if (x > x1) x1 = x;
+        if (y < y0) y0 = y;
+        if (y > y1) y1 = y;
+      }
+    }
+  }
+  if (x1 < 0 || (x0 === 0 && y0 === 0 && x1 === c.width - 1 && y1 === c.height - 1)) return file;
+  const w = x1 - x0 + 1;
+  const h = y1 - y0 + 1;
+  const out = document.createElement("canvas");
+  out.width = w;
+  out.height = h;
+  out.getContext("2d")!.drawImage(c, x0, y0, w, h, 0, 0, w, h);
+  const blob = await new Promise<Blob | null>((r) => out.toBlob(r, "image/webp", 0.95));
+  return blob ? new File([blob], file.name.replace(/\.\w+$/, ".webp"), { type: "image/webp" }) : file;
+}
+
+/**
+ * One home image slot: direct browser upload to the `campaigns` bucket, then
+ * the server records it. Hero stage slots expect cut-out photos (no background).
+ */
+export function HomeMediaUploader({ slot, alt, hasImage, stage }: { slot: string; alt: string; hasImage: boolean; stage: boolean }) {
+  const router = useRouter();
+  const [file, setFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
+  const [info, setInfo] = useState<{ width: number; transparent: boolean } | null>(null);
+  const [text, setText] = useState(alt);
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+
+  const pick = async (f: File | undefined) => {
+    if (preview) URL.revokeObjectURL(preview);
+    setMsg(null);
+    if (!f || !f.type.startsWith("image/")) return setFile(null);
+    const bmp = await createImageBitmap(f).catch(() => null);
+    setFile(f);
+    setPreview(URL.createObjectURL(f));
+    setInfo({ width: bmp ? Math.max(bmp.width, bmp.height) : 0, transparent: await hasTransparentEdges(f).catch(() => false) });
+  };
+
+  const save = async () => {
+    setBusy(true);
+    setMsg(null);
+    try {
+      let path: string | null = null;
+      if (file) {
+        const sb = supabaseBrowser();
+        if (!sb) throw new Error("Supabase no está configurado.");
+        const source = stage && info?.transparent ? await trimTransparent(file) : file;
+        const blob = await prepare(source);
+        const ext = blob.type === "image/webp" ? "webp" : (source.type.split("/")[1] ?? "jpg");
+        path = `home/${slot}-${crypto.randomUUID()}.${ext}`;
+        const { error } = await sb.storage.from("campaigns").upload(path, blob, { contentType: blob.type || source.type, upsert: false, cacheControl: "31536000" });
+        if (error) throw new Error(error.message);
+      }
+      const res = await registerHomeMedia({ slot, path, alt: text });
+      if (!res.ok) throw new Error(res.error);
+      if (preview) URL.revokeObjectURL(preview);
+      setFile(null);
+      setPreview(null);
+      setInfo(null);
+      setMsg({ ok: true, text: "Publicado en el inicio." });
+      router.refresh();
+    } catch (e) {
+      setMsg({ ok: false, text: e instanceof Error ? e.message : "No se pudo publicar." });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="grid gap-3">
+      <div>
+        <label className="field-label" htmlFor={`img-${slot}`}>{stage ? "Foto recortada (PNG o WEBP sin fondo)" : "Imagen (JPG, PNG, WEBP, AVIF)"}</label>
+        <input id={`img-${slot}`} type="file" accept="image/jpeg,image/png,image/webp,image/avif" onChange={(e) => pick(e.target.files?.[0])} className="text-sm" />
+      </div>
+      {preview && info && (
+        <div className="flex items-center gap-3 border border-line p-2">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={preview} alt="" className="h-16 w-16 shrink-0 bg-graphite object-contain" />
+          <div className="text-[11px] leading-relaxed">
+            <p className={info.width < 1600 ? "text-crimson" : "text-smoke"}>{info.width}px{info.width < 1600 ? " · baja resolución, se verá menos nítida" : ""}</p>
+            {stage && (
+              <p className={info.transparent ? "text-smoke" : "text-crimson"}>
+                {info.transparent ? "Sin fondo: lista para el escenario (los márgenes vacíos se recortan solos)." : "Tiene fondo: en el escenario se verá como un recuadro. Recórtala (por ejemplo con Photoroom o remove.bg) y súbela en PNG o WEBP."}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+      <div>
+        <label className="field-label" htmlFor={`alt-${slot}`}>{stage ? "Nombre del modelo (se muestra al pasar el cursor)" : "Descripción de la imagen"}</label>
+        <input id={`alt-${slot}`} value={text} onChange={(e) => setText(e.target.value)} maxLength={160} className="field" placeholder={stage ? "Ej.: Nike Air Max 97 Triple Black" : "Ej.: Tenis blancos sobre fondo negro"} />
+      </div>
+      <div className="flex items-center gap-3">
+        <button type="button" onClick={save} disabled={busy || (!file && !hasImage)} className="btn btn-primary h-10 min-h-0">{busy ? "Publicando…" : "Publicar"}</button>
+        {msg && <p role="status" className={msg.ok ? "text-sm text-bone" : "text-sm text-crimson"}>{msg.text}</p>}
+      </div>
     </div>
   );
 }

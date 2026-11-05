@@ -1,7 +1,8 @@
 /* eslint-disable @next/next/no-img-element */
 import { requireStaff } from "@/lib/auth";
-import { PageHeader, Flash, Field, Pill } from "@/features/admin/ui";
-import { clearHomeMedia, saveHomeMedia } from "@/features/admin/actions/commerce";
+import { PageHeader, Flash, Pill } from "@/features/admin/ui";
+import { clearHomeMedia } from "@/features/admin/actions/commerce";
+import { HomeMediaUploader } from "@/features/admin/MediaUploader";
 import { homeMediaSlots } from "@/lib/home-media";
 
 export default async function HomeContentAdmin({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
@@ -14,6 +15,7 @@ export default async function HomeContentAdmin({ searchParams }: { searchParams:
       <Flash sp={await searchParams} />
       <p className="mb-8 max-w-3xl text-sm text-smoke">
         Fotografías del hero, las categorías y los banners. Usa solo fotos propias o con licencia (nunca imágenes de Google ni fotos oficiales de marcas sin permiso).
+        Los tres espacios «Hero» forman el escenario principal: cada tenis sobre un pedestal con aro de luz. Súbelos recortados, sin fondo, y cada uno en un ángulo distinto. El escenario aparece cuando está la foto central.
         Mientras un espacio no tenga foto, el inicio muestra un panel gráfico de marca. El producto protagonista con precio se define en <a href="/admin/campaigns" className="underline">Campañas</a> cuando exista catálogo.
       </p>
       <div className="grid gap-4 md:grid-cols-2">
@@ -26,18 +28,10 @@ export default async function HomeContentAdmin({ searchParams }: { searchParams:
                 {m ? <Pill tone="ok">Con foto</Pill> : <Pill>Diseño de marca</Pill>}
               </div>
               <div className="mb-3 aspect-[16/9] overflow-hidden bg-graphite">
-                {m?.image_url ? <img src={m.image_url} alt={m.alt} className="h-full w-full object-cover" /> : <p className="grid h-full place-items-center text-xs text-smoke">Sin fotografía</p>}
+                {m?.image_url ? <img src={m.image_url} alt={m.alt} className={`h-full w-full ${"stage" in s && s.stage ? "object-contain" : "object-cover"}`} /> : <p className="grid h-full place-items-center text-xs text-smoke">Sin fotografía</p>}
               </div>
-              <form action={saveHomeMedia} encType="multipart/form-data" className="grid gap-3">
-                <input type="hidden" name="slot" value={s.slot} />
-                <div>
-                  <label className="field-label" htmlFor={`img-${s.slot}`}>Imagen (JPG, PNG, WEBP, AVIF · máx. 5 MB)</label>
-                  <input id={`img-${s.slot}`} type="file" name="image" accept="image/jpeg,image/png,image/webp,image/avif" className="text-sm" />
-                  <p className="mt-1 text-xs text-smoke">{s.hint}</p>
-                </div>
-                <Field label="Descripción de la imagen" name="alt" defaultValue={m?.alt} placeholder="Ej.: Tenis blancos sobre fondo negro" />
-                <button className="btn btn-primary h-10 min-h-0">Publicar</button>
-              </form>
+              <p className="mb-3 text-xs text-smoke">{s.hint}</p>
+              <HomeMediaUploader slot={s.slot} alt={m?.alt ?? ""} hasImage={Boolean(m?.image_url)} stage={"stage" in s && s.stage} />
               {m && (
                 <form action={clearHomeMedia} className="mt-2">
                   <input type="hidden" name="slot" value={s.slot} />

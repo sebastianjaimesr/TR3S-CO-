@@ -235,10 +235,17 @@ export async function getHeroData(): Promise<HeroData> {
 }
 
 /** Owner-uploaded home photos (hero, categories, banner, story). Empty until uploaded in /admin/home. */
+/** DEMO only: placeholder renders that show the hero stage layout. Never used with a database. */
+const demoHomeMedia: HomeMedia = {
+  "hero-centro": { url: "/demo/stage-runner-x-graphite.webp", alt: "Demo · espacio Air Max 97" },
+  "hero-izquierda": { url: "/demo/stage-trainer-pro-onyx.webp", alt: "Demo · espacio Air Max Plus TN" },
+  "hero-derecha": { url: "/demo/stage-court-low-white.webp", alt: "Demo · espacio Dunk Low Panda" },
+};
+
 export const getHomeMedia = unstable_cache(
   async (): Promise<HomeMedia> => {
     const sb = supabasePublic();
-    if (!sb) return {};
+    if (!sb) return isDemoMode() ? demoHomeMedia : {};
     const { data, error } = await sb.from("home_media").select("slot, image_url, alt");
     if (error || !data) return {};
     return Object.fromEntries(data.filter((m) => m.image_url).map((m) => [m.slot, { url: m.image_url as string, alt: (m.alt as string) ?? "" }])) as HomeMedia;

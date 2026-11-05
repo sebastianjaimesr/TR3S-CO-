@@ -307,3 +307,247 @@
     }
   }
 }
+
+/* ───────────── Hero stage (three protagonist sneakers) ───────────── */
+@layer components {
+  .hero-stage {
+    --px: 0;
+    --py: 0;
+    --lx: 50%;
+    --ly: 35%;
+  }
+  .stage-wait [data-e] {
+    opacity: 0;
+    /* Fallback: if scripts never run the stage still appears. */
+    animation: stage-reveal 0.6s 2.5s forwards;
+  }
+  @keyframes stage-reveal {
+    to {
+      opacity: 1;
+    }
+  }
+  .stage-layer {
+    pointer-events: none;
+    transform: translate3d(calc(var(--px) * var(--d, 1) * 16px), calc(var(--py) * var(--d, 1) * 9px), 0);
+    will-change: transform;
+  }
+  .stage-podium {
+    position: absolute;
+  }
+  .stage-shoe {
+    pointer-events: auto;
+    transition: transform 0.7s var(--ease-out-expo), opacity 0.5s, filter 0.5s;
+  }
+  .stage-podium[data-state="on"] .stage-shoe {
+    transform: translateY(-4%) scale(1.035);
+  }
+  .stage-podium[data-state="off"] .stage-shoe {
+    filter: brightness(0.7);
+  }
+  .stage-photo {
+    filter: drop-shadow(0 28px 22px rgb(0 0 0 / 0.55)) drop-shadow(0 0 34px rgb(213 0 37 / 0.12));
+  }
+  .stage-float {
+    animation: stage-float 7s ease-in-out infinite;
+  }
+  .stage-mirror {
+    opacity: 0.2;
+    -webkit-mask-image: linear-gradient(to bottom, #000, transparent 85%);
+    mask-image: linear-gradient(to bottom, #000, transparent 85%);
+  }
+  .stage-mirror-float {
+    animation: stage-float-mirror 7s ease-in-out infinite;
+  }
+  @keyframes stage-float {
+    50% {
+      transform: translateY(-2.2%);
+    }
+  }
+  @keyframes stage-float-mirror {
+    50% {
+      transform: translateY(2.2%);
+    }
+  }
+  .stage-caption {
+    opacity: 0;
+    transition: opacity 0.4s, transform 0.6s var(--ease-out-expo);
+  }
+  .stage-podium[data-state="on"] .stage-caption {
+    opacity: 1;
+  }
+
+  /* Polished black stone: top face and cylinder body */
+  .stage-top {
+    aspect-ratio: 100 / 24;
+    border-radius: 50%;
+    background:
+      radial-gradient(ellipse 60% 70% at 42% 40%, rgb(255 255 255 / 0.1), transparent 70%),
+      radial-gradient(ellipse at 50% 50%, #1c1c1e 0%, #0b0b0c 70%, #050505 100%);
+    box-shadow:
+      inset 0 2px 1px rgb(255 255 255 / 0.12),
+      inset 0 -6px 14px rgb(0 0 0 / 0.8);
+  }
+  .stage-body {
+    margin-top: -12%;
+    border-radius: 0 0 50% 50% / 0 0 24% 24%;
+    background:
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='s'><feTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.09 0'/></filter><rect width='100%' height='100%' filter='url(%23s)'/></svg>"),
+      linear-gradient(90deg, #030303 0%, #161618 18%, #242427 34%, #121213 55%, #070707 78%, #020202 100%);
+    box-shadow: inset 0 18px 24px -12px rgb(0 0 0 / 0.9);
+  }
+  .stage-body::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(90deg, transparent 0 30%, rgb(213 0 37 / 0.16) 50%, transparent 70%);
+    opacity: 0.5;
+    mix-blend-mode: screen;
+  }
+  .stage-body-mirror {
+    margin-top: 1px;
+    opacity: 0.18;
+    background: linear-gradient(90deg, #030303, #242427 34%, #070707 78%);
+    border-radius: 50% 50% 0 0 / 24% 24% 0 0;
+    -webkit-mask-image: linear-gradient(to bottom, #000, transparent 80%);
+    mask-image: linear-gradient(to bottom, #000, transparent 80%);
+  }
+  .stage-contact {
+    position: absolute;
+    z-index: 11;
+    left: 12%;
+    right: 12%;
+    top: 2%;
+    aspect-ratio: 100 / 14;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, rgb(0 0 0 / 0.85), transparent);
+    animation: stage-contact 7s ease-in-out infinite;
+  }
+  @keyframes stage-contact {
+    50% {
+      transform: scaleX(0.92);
+      opacity: 0.75;
+    }
+  }
+
+  /* Red light rings */
+  .stage-ring {
+    position: absolute;
+    left: -16%;
+    width: 132%;
+    top: 0;
+    margin-top: -4.5%;
+    overflow: visible;
+    fill: none;
+    pointer-events: none;
+  }
+  .stage-ring-core {
+    stroke: #ff3355;
+    stroke-width: 1.1;
+    stroke-linecap: round;
+    transition: stroke-width 0.5s;
+  }
+  .stage-ring-glow {
+    stroke: var(--color-crimson);
+    stroke-width: 5;
+    stroke-linecap: round;
+    filter: blur(4px);
+    opacity: 0.85;
+    animation: stage-pulse 4.5s ease-in-out infinite;
+  }
+  .stage-podium[data-state="on"] .stage-ring-core {
+    stroke-width: 1.8;
+  }
+  .stage-halo-core {
+    fill: none;
+    stroke: #ff2a4d;
+    stroke-width: 1.2;
+  }
+  .stage-halo-glow {
+    fill: none;
+    stroke: var(--color-crimson);
+    stroke-width: 7;
+    filter: blur(7px);
+    opacity: 0.75;
+    animation: stage-pulse 4.5s ease-in-out infinite;
+  }
+  .stage-halo-dash {
+    fill: none;
+    stroke: rgb(255 255 255 / 0.18);
+    stroke-width: 0.4;
+    stroke-dasharray: 1 5;
+    transform-origin: 100px 100px;
+    animation: spin 60s linear infinite;
+  }
+  @keyframes stage-pulse {
+    50% {
+      opacity: 0.5;
+    }
+  }
+
+  /* Light, floor and haze */
+  .stage-cone {
+    position: absolute;
+    left: 20%;
+    right: 20%;
+    top: -12%;
+    height: 85%;
+    background: linear-gradient(to bottom, rgb(255 255 255 / 0.09), rgb(255 255 255 / 0.02) 60%, transparent);
+    clip-path: polygon(38% 0, 62% 0, 100% 100%, 0 100%);
+    filter: blur(18px);
+    pointer-events: none;
+  }
+  .stage-spot {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(circle closest-side at var(--lx) var(--ly), rgb(255 255 255 / 0.06), transparent);
+    mix-blend-mode: screen;
+  }
+  .stage-floor {
+    position: absolute;
+    inset: 58% -10% -4% -10%;
+    pointer-events: none;
+    background:
+      radial-gradient(ellipse 34% 16% at 50% 92%, rgb(213 0 37 / 0.28), transparent 70%),
+      radial-gradient(ellipse 20% 9% at 21% 66%, rgb(213 0 37 / 0.18), transparent 70%),
+      radial-gradient(ellipse 20% 9% at 79% 66%, rgb(213 0 37 / 0.18), transparent 70%),
+      linear-gradient(to bottom, transparent, rgb(255 255 255 / 0.025) 40%, transparent);
+  }
+  .stage-smoke {
+    position: absolute;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, rgb(220 220 225 / 0.075), transparent);
+    filter: blur(24px);
+    animation: stage-drift 26s ease-in-out infinite alternate;
+  }
+  .stage-smoke-b {
+    animation-duration: 34s;
+    animation-direction: alternate-reverse;
+  }
+  .stage-smoke-red {
+    background: radial-gradient(closest-side, rgb(213 0 37 / 0.1), rgb(200 200 205 / 0.04) 55%, transparent);
+    animation-duration: 30s;
+  }
+  @keyframes stage-drift {
+    to {
+      transform: translateX(12%) scale(1.08);
+    }
+  }
+}
+
+/* Phones: lighter haze and glows to keep the stage fluid on modest GPUs. */
+@media (max-width: 639px) {
+  .stage-smoke {
+    filter: none;
+    opacity: 0.8;
+  }
+  .stage-cone {
+    filter: blur(10px);
+  }
+  .stage-ring-glow,
+  .stage-halo-glow {
+    filter: blur(2.5px);
+    animation: none;
+  }
+}

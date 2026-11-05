@@ -4,17 +4,22 @@ import { Logo } from "@/components/Logo";
 import { ArrowIcon } from "@/components/icons";
 import { site } from "@/lib/site";
 import { HeroShowcase } from "@/features/home/HeroShowcase";
+import { HeroStage, type StageShoe } from "@/features/home/HeroStage";
 import type { Product } from "@/types/domain";
 
 const ring = "ESENCIA · ESTILO · VISAJE · TR3S & CO. · ";
 
 /**
- * Brand-first hero. Realism before effects: the spotlight is always a REAL
- * catalog product shown with its own studio photo (never a generated model).
- * With no photographed product yet, the official logo composition is shown.
- * A hero photo uploaded in /admin/home becomes the background.
+ * Brand-first hero. Realism before effects, in this order of preference:
+ * 1. the three-sneaker stage, built from the owner's cut-out photos
+ *    (/admin/home, shown once the central protagonist is uploaded);
+ * 2. a REAL catalog product with its own studio photo;
+ * 3. the official logo composition.
+ * Never a generated or redrawn shoe. A hero photo uploaded in /admin/home
+ * becomes the background.
  */
-export function BrandHero({ photo, spotlight }: { photo?: { url: string; alt: string }; spotlight?: Product }) {
+export function BrandHero({ photo, spotlight, stage = [] }: { photo?: { url: string; alt: string }; spotlight?: Product; stage?: StageShoe[] }) {
+  const hasStage = stage.some((s) => s.slot === "hero-centro");
   return (
     <section aria-labelledby="hero-title" className="grain relative isolate overflow-hidden bg-ink">
       {photo ? (
@@ -29,14 +34,14 @@ export function BrandHero({ photo, spotlight }: { photo?: { url: string; alt: st
       <div aria-hidden className="absolute inset-x-0 bottom-0 -z-10 h-1/3 bg-gradient-to-t from-ink to-transparent" />
 
       <div className="mx-auto grid max-w-[1600px] items-center gap-6 px-4 pb-16 pt-10 md:px-8 lg:min-h-[calc(100svh-112px)] lg:grid-cols-12 lg:gap-10 lg:py-16">
-        <div className="relative z-10 lg:col-span-6 xl:col-span-7">
+        <div className={`relative z-10 ${hasStage ? "lg:col-span-5" : "lg:col-span-6 xl:col-span-7"}`}>
           <div>
             <p className="eyebrow hero-line mb-6 flex items-center gap-3">
               <span className="inline-block h-px w-10 bg-crimson" aria-hidden />
               Sneakers · Streetwear · Deportivo
             </p>
           </div>
-          <h1 id="hero-title" className="headline text-[17vw] text-paper sm:text-[12vw] lg:text-[7vw] 2xl:text-[8.5rem]">
+          <h1 id="hero-title" className={`headline text-[17vw] text-paper sm:text-[12vw] ${hasStage ? "lg:text-[6.2vw] 2xl:text-[7.5rem]" : "lg:text-[7vw] 2xl:text-[8.5rem]"}`}>
             <span className="block"><span className="hero-line block" style={{ animationDelay: "0ms" }}>Tu estilo.</span></span>
             <span className="block"><span className="hero-line block text-outline" style={{ animationDelay: "120ms" }}>Tu esencia.</span></span>
             <span className="block"><span className="hero-line block text-crimson" style={{ animationDelay: "240ms" }}>Tu camino.</span></span>
@@ -50,14 +55,16 @@ export function BrandHero({ photo, spotlight }: { photo?: { url: string; alt: st
                 Comprar ahora <ArrowIcon className="transition-transform group-hover:translate-x-1" />
               </Link>
               <Link href="#categorias" className="btn btn-ghost px-8">
-                Descubrir
+                Descubrir colección
               </Link>
             </div>
           </div>
         </div>
 
-        <div className="lg:col-span-6 xl:col-span-5">
-          {spotlight ? (
+        <div className={hasStage ? "order-first lg:order-none lg:col-span-7 lg:-mr-4 xl:-mr-8" : "lg:col-span-6 xl:col-span-5"}>
+          {hasStage ? (
+            <HeroStage shoes={stage} />
+          ) : spotlight ? (
             <HeroShowcase product={spotlight} />
           ) : (
             <div aria-hidden className="relative mx-auto grid aspect-square w-full max-w-[min(86vw,520px)] place-items-center">
