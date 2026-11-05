@@ -76,7 +76,7 @@ export function Select({ label, name, options, defaultValue, className }: { labe
 export function Check({ label, name, defaultChecked }: { label: string; name: string; defaultChecked?: boolean }) {
   return (
     <label className="flex items-center gap-3 text-sm">
-      <input type="checkbox" name={name} defaultChecked={defaultChecked} className="h-4 w-4 accent-[#a52632]" />
+      <input type="checkbox" name={name} defaultChecked={defaultChecked} className="h-4 w-4 accent-[#d0142c]" />
       {label}
     </label>
   );

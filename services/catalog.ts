@@ -7,12 +7,17 @@ import { isSupabaseConfigured, publicEnv } from "@/lib/env";
 import { demoBrands, demoCampaign, demoProducts, demoSettings, categories as demoCategories } from "@/database/seed/demo-catalog";
 import { catalogFacets, filterProducts } from "@/services/catalog-filter";
 import type { AvailabilityStatus } from "@/types/domain";
+import type { HomeMedia } from "@/lib/home-media";
 
 export const CATALOG_TAG = "catalog";
 
-/** True when the storefront is running on the DEMO catalog (no database configured). */
+/**
+ * DEMO catalog: fictitious products used only for local development, and only
+ * when explicitly requested with NEXT_PUBLIC_DEMO_CATALOG=1 and no database.
+ * By default the storefront shows the real (possibly empty) catalog.
+ */
 export function isDemoMode() {
-  return !isSupabaseConfigured();
+  return !isSupabaseConfigured() && process.env.NEXT_PUBLIC_DEMO_CATALOG === "1";
 }
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -35,6 +40,7 @@ function mapProduct(row: any, avail: Map<string, any>): Product {
     price: row.price,
     compareAtPrice: row.compare_at_price,
     isNew: row.is_new,
+    featuredRank: row.featured_rank ?? null,
     isActive: row.is_active,
     isDemo: row.is_demo,
     modelUrl: row.model_url,
@@ -78,7 +84,7 @@ const PRODUCT_SELECT =
 const fetchAllProducts = unstable_cache(
   async (): Promise<Product[]> => {
     const sb = supabasePublic();
-    if (!sb) return demoProducts;
+    if (!sb) return isDemoMode() ? demoProducts : [];
     const { data, error } = await sb
       .from("products")
       .select(PRODUCT_SELECT)
@@ -109,7 +115,7 @@ export const getAllProducts = cache(fetchAllProducts);
 
 export async function searchProducts(filters: CatalogFilters) {
   const all = await getAllProducts();
-  return { ...filterProducts(all, filters), facets: catalogFacets(all) };
+  return { ...filterProducts(all, filters), facets: catalogFacets(all), catalogSize: all.length };
 }
 
 export async function getProductBySlug(slug: string): Promise<Product | null> {
@@ -130,7 +136,7 @@ export async function getRelatedProducts(product: Product, limit = 4): Promise<P
 export const getBrands = unstable_cache(
   async (): Promise<Brand[]> => {
     const sb = supabasePublic();
-    if (!sb) return demoBrands;
+    if (!sb) return isDemoMode() ? demoBrands : [];
     const { data, error } = await sb.from("brands").select("*").eq("is_active", true).order("name");
     if (error) throw new Error(error.message);
     return (data ?? []).map(mapBrand);
@@ -163,7 +169,13 @@ export const getStoreSettings = unstable_cache(
       shippingFlatRate: data.shipping_flat_rate,
       freeShippingFrom: data.free_shipping_from,
       bankTransferInstructions: data.bank_transfer_instructions,
-      paymentMethods: { wompi: data.payment_wompi_enabled, transfer: data.payment_transfer_enabled },
+      paymentMethods: {
+        wompi: data.payment_wompi_enabled,
+        mercadopago: data.payment_mercadopago_enabled ?? false,
+        payu: data.payment_payu_enabled ?? false,
+        transfer: data.payment_transfer_enabled,
+      },
+      storeDescription: data.store_description ?? null,
       contactEmail: data.contact_email,
       contactPhone: data.contact_phone,
       address: data.address,
@@ -220,3 +232,16 @@ export async function getHeroData(): Promise<HeroData> {
   }
   return { campaign, products };
 }
+
+/** Owner-uploaded home photos (hero, categories, banner, story). Empty until uploaded in /admin/home. */
+export const getHomeMedia = unstable_cache(
+  async (): Promise<HomeMedia> => {
+    const sb = supabasePublic();
+    if (!sb) return {};
+    const { data, error } = await sb.from("home_media").select("slot, image_url, alt");
+    if (error || !data) return {};
+    return Object.fromEntries(data.filter((m) => m.image_url).map((m) => [m.slot, { url: m.image_url as string, alt: (m.alt as string) ?? "" }])) as HomeMedia;
+  },
+  ["home-media"],
+  { revalidate: 60, tags: [CATALOG_TAG] },
+);

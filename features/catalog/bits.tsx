@@ -104,6 +104,7 @@ export function QuickAdd({ product, className }: { product: Product; className?:
                       size: v.size,
                       color: v.color,
                       price: v.price ?? product.price,
+                      compareAtPrice: (v.price ?? product.price) === product.price ? product.compareAtPrice : null,
                       image: product.images[0]?.url ?? null,
                       isDemo: product.isDemo,
                       availability: v.availability.status,

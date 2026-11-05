@@ -42,17 +42,32 @@ El inventario nunca se edita a mano: cada cambio deja un movimiento con nota. La
 
 ## Pedidos (sales)
 
-| Estado | Qué significa | Qué hacer |
-|---|---|---|
-| Pendiente de pago | Pago con Wompi en curso (reserva 60 min) | Nada; se actualiza solo |
-| Esperando transferencia | El cliente debe transferir (reserva 48 h) | Al ver el dinero en el banco: **Confirmar pago** con la referencia bancaria y el monto exacto |
-| Esperando proveedor | Pagado, con ítems bajo pedido | Llama al proveedor y marca **Sí tiene / No tiene** por ítem. Cuando todos están confirmados, pasa solo a *En preparación* |
-| En preparación | Listo para alistar | Empaca y usa **Marcar despachado** con transportadora y guía |
-| Despachado | En camino | Cuando llegue, cambia a **Entregado** |
-| Incidencia | Monto distinto, pago tardío o proveedor sin stock | Resuélvelo con el cliente (cambio, espera o reembolso por Wompi o transferencia). Luego devuelve el pedido a preparación o cancélalo |
-| Cancelado | — | Al cancelar, el stock reservado se libera, o se reingresa si ya se había descontado |
+Cada pedido tiene **tres estados independientes**: pago, pedido y envío.
 
-El cliente sigue su pedido en `/orders/track` con número y correo. El botón de WhatsApp del pedido abre un mensaje con el número del pedido.
+| Estado del pedido | Qué significa | Qué hacer |
+|---|---|---|
+| Pendiente de pago | Pago en línea en curso, o envío por cotizar | Nada, se actualiza solo. Si tiene cotización pendiente, ve a *Envíos* |
+| Esperando transferencia | El cliente debe transferir (reserva 48 h) | Cuando veas el dinero en el banco: **Confirmar pago** con la referencia y el monto exacto |
+| Esperando proveedor | Pagado, con ítems bajo pedido | Llama al proveedor y marca **Sí tiene / No tiene** por ítem |
+| En preparación | Pagado y listo para alistar | Empaca y registra el despacho en *Envíos* |
+| Enviado | Despachado con transportadora y guía | Actualiza a *En tránsito* o *Entregado* |
+| Incidencia | Monto distinto, pago tardío, reverso, pago antes de aceptar la cotización o proveedor sin stock | Resuélvelo con el cliente. Luego devuelve el pedido a preparación o cancélalo |
+| Cancelado | — | Al cancelar, el stock reservado se libera |
+
+**Pagos:** un pedido solo pasa a pagado cuando la pasarela lo confirma por webhook o consulta verificada (o cuando confirmas una transferencia). Si un pago es rechazado, el cliente puede **reintentar** o cambiar de método desde el enlace privado de su pedido, mientras siga vigente la reserva. En `/admin/payments` ves todos los intentos y los eventos recibidos de cada pasarela, incluidos los rechazados o con error.
+
+**Enlace del cliente:** cada pedido tiene un enlace privado (`/checkout/result?order=…&t=…`) que aparece en la ficha del pedido. Ahí el cliente ve sus estados, paga, acepta la cotización y sigue el envío. También puede rastrear en `/orders/track` con número y correo.
+
+## Envíos (sales)
+
+`/admin/shipping` tiene dos pestañas:
+
+- **Despachos y cotizaciones.** *Pendientes de cotización* lista los pedidos a zonas sin tarifa: entra al pedido y registra el valor en **Cotizar envío**. El cliente recibe el nuevo total en su enlace y debe aceptarlo antes de pagar. Nunca se cobra sin aceptación. *Pedidos pagados* es el tablero de despacho: estado (preparando, despachado, en tránsito, entregado, novedad en la entrega), transportadora, número de guía y observación. Despachar exige transportadora y guía.
+- **Zonas y tarifas.** Ciudad → departamento → resto del país. Cada zona puede tener tarifa, envío gratis desde, tiempo estimado o requerir cotización.
+
+## Contenido del inicio (admin)
+
+En `/admin/home` subes las fotos del hero, de las 5 categorías, del banner y de la sección de marca, cada una con su texto alternativo. Mientras un espacio no tenga foto, el inicio muestra un panel gráfico de marca. Usa solo fotos propias o con licencia.
 
 ## Promociones (admin)
 
@@ -71,7 +86,7 @@ En la ficha del producto → **Promoción**: ingresa el precio promocional, que 
 
 ## Configuración y roles (admin)
 
-**Configuración:** WhatsApp, contacto, redes, envíos, instrucciones de transferencia, métodos de pago, vigencia de proveedor y umbral de stock bajo.
+**Configuración:** WhatsApp, contacto, redes, descripción de la tienda, envíos (tarifa general o cotización, horas de reserva de una cotización), instrucciones de transferencia, pasarelas de pago (cada tarjeta muestra si sus credenciales están completas y si está en pruebas o producción), vigencia de proveedor y umbral de stock bajo.
 
 **Roles:** asigna roles a personas que ya crearon su cuenta en `/login`. Revoca el rol cuando alguien deje el equipo.
 

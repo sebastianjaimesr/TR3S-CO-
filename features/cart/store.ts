@@ -14,6 +14,8 @@ export interface CartItem {
   color: string;
   /** Display price only. The server always recomputes prices from the database. */
   price: number;
+  /** Real previous price when the product has a genuine discount. */
+  compareAtPrice?: number | null;
   image: string | null;
   quantity: number;
   isDemo: boolean;
@@ -71,6 +73,7 @@ export const useCart = create<CartState>()(
 export function cartTotals(items: CartItem[], shippingFlatRate: number, freeShippingFrom: number | null) {
   const subtotal = items.reduce((acc, i) => acc + i.price * i.quantity, 0);
   const count = items.reduce((acc, i) => acc + i.quantity, 0);
+  const savings = items.reduce((acc, i) => acc + (i.compareAtPrice && i.compareAtPrice > i.price ? (i.compareAtPrice - i.price) * i.quantity : 0), 0);
   const shipping = items.length === 0 ? 0 : freeShippingFrom != null && subtotal >= freeShippingFrom ? 0 : shippingFlatRate;
-  return { subtotal, count, shipping, total: subtotal + shipping };
+  return { subtotal, count, shipping, savings, total: subtotal + shipping };
 }

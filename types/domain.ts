@@ -2,6 +2,8 @@ export type Gender = "men" | "women" | "unisex";
 
 export type AvailabilityStatus = "available_now" | "available_on_order" | "sold_out";
 
+export type PaymentMethodId = "wompi" | "mercadopago" | "payu" | "transfer";
+
 export type FulfillmentType = "own" | "on_order";
 
 export interface Brand {
@@ -74,6 +76,8 @@ export interface Product {
   /** Real previous price; only set when a real discount exists. */
   compareAtPrice: number | null;
   isNew: boolean;
+  /** Manual merchandising rank (lower first); null when not featured. */
+  featuredRank?: number | null;
   isActive: boolean;
   /** DEMO products can never be purchased. */
   isDemo: boolean;
@@ -99,7 +103,8 @@ export interface StoreSettings {
   shippingFlatRate: number;
   freeShippingFrom: number | null;
   bankTransferInstructions: string | null;
-  paymentMethods: { wompi: boolean; transfer: boolean };
+  paymentMethods: Record<PaymentMethodId, boolean>;
+  storeDescription: string | null;
   contactEmail: string | null;
   contactPhone: string | null;
   address: string | null;

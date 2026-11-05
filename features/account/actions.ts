@@ -11,8 +11,15 @@ export interface TrackResult {
     status: string;
     created_at: string;
     total: number;
+    subtotal: number;
+    shipping: number;
+    discount: number;
+    payment_method: string;
+    payment_status: string;
+    shipping_quote_status: string;
     items: { name: string; brand: string; size: string; color: string; quantity: number; fulfillment: string; lead_time_days: number | null }[];
-    shipment: { carrier: string; tracking_number: string; shipped_at: string; delivered_at: string | null } | null;
+    shipment: { status: string; carrier: string | null; tracking_number: string | null; shipped_at: string | null; delivered_at: string | null; estimated_delivery: string | null } | null;
+    shipment_events: { status: string; note: string | null; at: string }[] | null;
     events: { status: string; at: string }[];
   };
 }

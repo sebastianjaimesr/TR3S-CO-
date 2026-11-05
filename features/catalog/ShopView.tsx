@@ -39,7 +39,7 @@ export async function ShopView({
     const narrowed = urlFilters.category?.filter((c) => preset.category!.includes(c));
     filters.category = narrowed?.length ? narrowed : preset.category;
   }
-  const { items, total, page, pageCount, facets } = await searchProducts(filters);
+  const { items, total, page, pageCount, facets, catalogSize } = await searchProducts(filters);
 
   const pageHref = (p: number) => {
     const sp = new URLSearchParams();
@@ -64,7 +64,17 @@ export async function ShopView({
           </Suspense>
         </aside>
         <section aria-label="Resultados">
-          {items.length === 0 ? (
+          {catalogSize === 0 ? (
+            <div className="relative overflow-hidden border border-dashed border-line p-10 md:p-14">
+              <div aria-hidden className="stripes absolute inset-0" />
+              <div className="relative">
+                <p className="eyebrow mb-3 text-crimson">Catálogo oficial en preparación</p>
+                <p className="headline text-4xl md:text-5xl">Muy pronto, los primeros pares.</p>
+                <p className="mt-4 max-w-xl text-sm text-smoke">Estamos publicando cada referencia con fotos reales, tallas y precios confirmados. Si buscas un par en particular, escríbenos.</p>
+                <Link href="/contact" className="btn btn-ghost mt-6">Pregúntanos por un par</Link>
+              </div>
+            </div>
+          ) : items.length === 0 ? (
             <div className="border border-line p-12 text-center">
               <p className="font-display text-2xl">No encontramos productos con esos filtros.</p>
               <Link href={basePath} className="btn btn-ghost mt-6">Quitar filtros</Link>

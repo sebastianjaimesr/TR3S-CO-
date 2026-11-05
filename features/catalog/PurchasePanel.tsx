@@ -50,6 +50,7 @@ export function PurchasePanel({ product, whatsappNumber, initialSize }: { produc
       size: variant.size,
       color: variant.color,
       price,
+      compareAtPrice: (variant.price ?? product.price) === product.price ? product.compareAtPrice : null,
       image: product.images[0]?.url ?? null,
       isDemo: product.isDemo,
       availability: variant.availability.status,

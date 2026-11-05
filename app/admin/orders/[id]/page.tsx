@@ -2,20 +2,23 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireStaff, can } from "@/lib/auth";
 import { PageHeader, Flash, Table, Td, Pill, Field, TextArea } from "@/features/admin/ui";
-import { confirmSupplierItem, confirmTransfer, saveStaffNotes, setStatus, shipOrder } from "@/features/admin/actions/orders";
+import { confirmSupplierItem, confirmTransfer, saveStaffNotes, setStatus } from "@/features/admin/actions/orders";
+import { setShippingQuote, updateShipment } from "@/features/admin/actions/commerce";
+import { publicEnv } from "@/lib/env";
 import { formatCOP, formatDate } from "@/lib/format";
-import { orderStatusLabel } from "@/features/account/status";
+import { orderStatusLabel, orderTone, paymentMethodLabel, paymentStatusLabel, paymentTone, quoteStatusLabel, shipmentStatusLabel, shipmentTone } from "@/features/account/status";
 import { orderFollowUpMessage, whatsappLink } from "@/services/whatsapp";
 
 export default async function OrderDetail({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<Record<string, string | undefined>> }) {
   const { id } = await params;
   const staff = await requireStaff(["sales", "inventory"]);
-  const [{ data: o }, { data: items }, { data: events }, { data: payments }, { data: shipment }] = await Promise.all([
+  const [{ data: o }, { data: items }, { data: events }, { data: payments }, { data: shipment }, { data: shipEvents }] = await Promise.all([
     staff.sb.from("orders").select("*").eq("id", id).maybeSingle(),
     staff.sb.from("order_items").select("*, supplier_stock(supplier:suppliers(name, phone))").eq("order_id", id),
     staff.sb.from("order_events").select("*").eq("order_id", id).order("created_at"),
     staff.sb.from("payments").select("*").eq("order_id", id).order("created_at"),
     staff.sb.from("shipments").select("*").eq("order_id", id).maybeSingle(),
+    staff.sb.from("shipment_events").select("*").eq("order_id", id).order("occurred_at"),
   ]);
   if (!o) notFound();
   const sales = can(staff, ["sales"]);
@@ -23,7 +26,17 @@ export default async function OrderDetail({ params, searchParams }: { params: Pr
 
   return (
     <>
-      <PageHeader title={`Pedido ${o.number}`} eyebrow={formatDate(o.created_at)} actions={<Pill tone={o.status === "incident" ? "bad" : "warn"}>{orderStatusLabel[o.status]}</Pill>} />
+      <PageHeader
+        title={`Pedido ${o.number}`}
+        eyebrow={formatDate(o.created_at)}
+        actions={
+          <>
+            <Pill tone={paymentTone(o.payment_status)}>Pago: {paymentStatusLabel[o.payment_status] ?? o.payment_status}</Pill>
+            <Pill tone={orderTone(o.status)}>Pedido: {orderStatusLabel[o.status]}</Pill>
+            <Pill tone={shipmentTone(shipment?.status)}>Envío: {shipment ? shipmentStatusLabel[shipment.status] : quoteStatusLabel[o.shipping_quote_status]}</Pill>
+          </>
+        }
+      />
       <Flash sp={await searchParams} />
       <div className="grid gap-8 xl:grid-cols-3">
         <section className="xl:col-span-2">
@@ -66,14 +79,15 @@ export default async function OrderDetail({ params, searchParams }: { params: Pr
           <dl className="mt-4 ml-auto max-w-xs space-y-1 text-sm">
             <div className="flex justify-between"><dt className="text-smoke">Subtotal</dt><dd>{formatCOP(o.subtotal)}</dd></div>
             {o.discount > 0 && <div className="flex justify-between"><dt className="text-smoke">Descuento {o.coupon_code}</dt><dd>−{formatCOP(o.discount)}</dd></div>}
-            <div className="flex justify-between"><dt className="text-smoke">Envío</dt><dd>{formatCOP(o.shipping)}</dd></div>
+            <div className="flex justify-between"><dt className="text-smoke">Envío{o.shipping_zone ? ` · ${o.shipping_zone}` : ""}</dt><dd>{o.shipping_quote_status === "pending" ? "Por cotizar" : formatCOP(o.shipping)}</dd></div>
             <div className="flex justify-between font-display text-lg"><dt>Total</dt><dd>{formatCOP(o.total)}</dd></div>
           </dl>
 
           <h2 className="mt-10 mb-3 font-display text-lg font-semibold">Pagos</h2>
+          <p className="mb-3 text-sm text-smoke">Método elegido: {paymentMethodLabel[o.payment_method] ?? o.payment_method} · intentos de pago: {o.payment_attempts}</p>
           <Table head={["Medio", "Transacción", "Estado", "Monto", "Fecha"]} empty={!payments?.length}>
             {payments?.map((p) => (
-              <tr key={p.id}><Td>{p.provider}</Td><Td className="text-xs">{p.transaction_id}</Td><Td><Pill tone={p.status === "approved" ? "ok" : "bad"}>{p.status}</Pill></Td><Td>{formatCOP(p.amount)}</Td><Td>{formatDate(p.created_at)}</Td></tr>
+              <tr key={p.id}><Td>{paymentMethodLabel[p.provider] ?? p.provider}</Td><Td className="break-all text-xs">{p.transaction_id}</Td><Td><Pill tone={paymentTone(p.status)}>{paymentStatusLabel[p.status] ?? p.status}</Pill></Td><Td>{formatCOP(p.amount)}</Td><Td>{formatDate(p.created_at)}</Td></tr>
             ))}
           </Table>
 
@@ -109,23 +123,63 @@ export default async function OrderDetail({ params, searchParams }: { params: Pr
             </div>
           </div>
 
-          {shipment && (
-            <div className="border border-line p-5 text-sm">
-              <p className="eyebrow mb-2">Despacho</p>
-              <p>{shipment.carrier} · guía {shipment.tracking_number}</p>
-              <p className="text-smoke">Enviado {formatDate(shipment.shipped_at)}{shipment.delivered_at ? ` · entregado ${formatDate(shipment.delivered_at)}` : ""}</p>
-            </div>
-          )}
+          <div className="border border-line bg-coal p-5 text-sm">
+            <p className="eyebrow mb-2">Enlace del pedido para el cliente</p>
+            <p className="break-all text-xs text-bone/80">{`${publicEnv.siteUrl}/checkout/result?order=${o.number}&t=${o.access_token}`}</p>
+            <p className="mt-2 text-xs text-smoke">Compártelo solo con el cliente: permite ver el pedido, aceptar la cotización y pagar.</p>
+          </div>
 
-          {sales && o.status === "preparing" && (
-            <form action={shipOrder} className="space-y-3 border border-line p-5">
-              <p className="eyebrow">Registrar despacho</p>
+          {sales && o.status === "pending_payment" && (o.shipping_quote_status === "pending" || o.shipping_quote_status === "quoted") && (
+            <form id="cotizar" action={setShippingQuote} className="space-y-3 border border-amber-300/40 p-5">
+              <p className="eyebrow">Cotizar envío · {o.city}, {o.department}</p>
               <input type="hidden" name="order_id" value={o.id} />
-              <Field label="Transportadora" name="carrier" required placeholder="Servientrega, Interrapidísimo, Coordinadora…" />
-              <Field label="Número de guía" name="tracking" required />
-              <button className="btn btn-primary w-full">Marcar despachado</button>
+              <Field label="Valor del envío (COP)" name="amount" type="number" min={0} defaultValue={o.shipping_quote_status === "quoted" ? o.shipping : undefined} required />
+              <Field label="Nota (transportadora, plazo)" name="note" />
+              <button className="btn btn-primary w-full">{o.shipping_quote_status === "quoted" ? "Actualizar cotización" : "Guardar cotización"}</button>
+              <p className="text-xs text-smoke">Luego envía al cliente el enlace del pedido: allí acepta el valor y paga. No se cobra antes.</p>
             </form>
           )}
+
+          <div className="border border-line p-5 text-sm">
+            <p className="eyebrow mb-2">Envío</p>
+            {shipment ? (
+              <>
+                <p><Pill tone={shipmentTone(shipment.status)}>{shipmentStatusLabel[shipment.status]}</Pill></p>
+                {shipment.carrier && <p className="mt-2">{shipment.carrier}{shipment.tracking_number ? ` · guía ${shipment.tracking_number}` : ""}</p>}
+                <p className="text-smoke">
+                  {shipment.shipped_at ? `Despachado ${formatDate(shipment.shipped_at)}` : "Sin despachar"}
+                  {shipment.delivered_at ? ` · entregado ${formatDate(shipment.delivered_at)}` : ""}
+                  {shipment.estimated_delivery ? ` · estimado ${formatDate(shipment.estimated_delivery)}` : ""}
+                </p>
+              </>
+            ) : (
+              <p className="text-smoke">{o.paid_at ? "Por preparar." : "Se habilita cuando el pago esté confirmado."}</p>
+            )}
+            {shipEvents && shipEvents.length > 0 && (
+              <ol className="mt-3 space-y-1 border-l border-line pl-3 text-xs text-smoke">
+                {shipEvents.map((e) => (
+                  <li key={e.id}>{new Date(e.occurred_at).toLocaleString("es-CO")} · {shipmentStatusLabel[e.status]}{e.note ? ` — ${e.note}` : ""}</li>
+                ))}
+              </ol>
+            )}
+            {sales && o.paid_at && !["cancelled"].includes(o.status) && (
+              <form action={updateShipment} className="mt-4 space-y-3 border-t border-line pt-4">
+                <input type="hidden" name="order_id" value={o.id} />
+                <div>
+                  <label htmlFor="ship-status" className="field-label">Estado del envío</label>
+                  <select id="ship-status" name="status" className="field" defaultValue={!shipment || shipment.status === "preparing" ? "dispatched" : shipment.status}>
+                    {(["preparing", "dispatched", "in_transit", "delivered", "delivery_issue"] as const).map((st) => <option key={st} value={st}>{shipmentStatusLabel[st]}</option>)}
+                  </select>
+                </div>
+                <Field label="Transportadora" name="carrier" defaultValue={shipment?.carrier} placeholder="Servientrega, Interrapidísimo, Coordinadora…" />
+                <Field label="Número de guía" name="tracking" defaultValue={shipment?.tracking_number} />
+                <Field label="Fecha del evento" name="occurred_at" type="datetime-local" hint="Vacío = ahora" />
+                <Field label="Entrega estimada" name="estimated_delivery" type="date" defaultValue={shipment?.estimated_delivery} />
+                <Field label="Observación / novedad" name="note" />
+                <button className="btn btn-primary w-full">Actualizar envío</button>
+              </form>
+            )}
+          </div>
 
           {sales && (
             <form action={setStatus} className="space-y-3 border border-line p-5">
@@ -141,7 +195,7 @@ export default async function OrderDetail({ params, searchParams }: { params: Pr
               </select>
               <Field label="Nota" name="note" />
               <button className="btn btn-ghost w-full">Aplicar</button>
-              {o.paid_at && <p className="text-xs text-smoke">Si cancelas un pedido pagado, gestiona el reembolso en Wompi o por transferencia.</p>}
+              {o.paid_at && <p className="text-xs text-smoke">Si cancelas un pedido pagado, gestiona el reembolso en {paymentMethodLabel[o.payment_method] ?? "la pasarela"} o por transferencia.</p>}
             </form>
           )}
 

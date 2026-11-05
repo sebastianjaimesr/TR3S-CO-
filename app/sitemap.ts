@@ -9,7 +9,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = publicEnv.siteUrl.replace(/\/$/, "");
   const [products, brands] = await Promise.all([getAllProducts(), getBrands()]);
   const now = new Date();
-  const statics = ["", "/shop", "/men", "/women", "/sneakers", "/sports", "/brands", "/new-arrivals", "/sale", "/about", "/contact", "/faq", "/orders/track"];
+  const statics = ["", "/shop", "/men", "/women", "/sneakers", "/streetwear", "/sports", "/brands", "/new-arrivals", "/sale", "/about", "/contact", "/faq", "/orders/track"];
   return [
     ...statics.map((p) => ({ url: `${base}${p}`, lastModified: now, changeFrequency: "daily" as const, priority: p === "" ? 1 : 0.7 })),
     ...Object.keys(policies).map((s) => ({ url: `${base}/policies/${s}`, lastModified: now, changeFrequency: "yearly" as const, priority: 0.2 })),

@@ -7,6 +7,7 @@ import { formatCOP } from "@/lib/format";
 import { availabilityLabel } from "@/services/availability";
 import { cartSummaryMessage, whatsappLink } from "@/services/whatsapp";
 import { WhatsappIcon } from "@/components/icons";
+import { EmptyCart } from "@/features/cart/EmptyCart";
 
 export function CartView({ shippingFlatRate, freeShippingFrom, whatsappNumber }: { shippingFlatRate: number; freeShippingFrom: number | null; whatsappNumber: string | null }) {
   const hydrated = useHydrated();
@@ -18,9 +19,8 @@ export function CartView({ shippingFlatRate, freeShippingFrom, whatsappNumber }:
 
   if (items.length === 0)
     return (
-      <div className="mt-10 border border-line p-12 text-center">
-        <p className="font-display text-2xl">Tu carrito está vacío.</p>
-        <Link href="/shop" className="btn btn-primary mt-6">Ir a la tienda</Link>
+      <div className="mt-10">
+        <EmptyCart />
       </div>
     );
 
@@ -47,7 +47,10 @@ export function CartView({ shippingFlatRate, freeShippingFrom, whatsappNumber }:
                 <select id={`qty-${i.variantId}`} value={i.quantity} onChange={(e) => setQuantity(i.variantId, Number(e.target.value))} className="field h-10 min-h-0 w-20 py-0">
                   {Array.from({ length: MAX_QTY }, (_, n) => n + 1).map((n) => <option key={n}>{n}</option>)}
                 </select>
-                <p className="w-28 text-right font-display">{formatCOP(i.price * i.quantity)}</p>
+                <p className="w-28 text-right font-display">
+                  {formatCOP(i.price * i.quantity)}
+                  {i.compareAtPrice && i.compareAtPrice > i.price && <s className="block text-xs text-smoke">{formatCOP(i.compareAtPrice * i.quantity)}</s>}
+                </p>
                 <button type="button" onClick={() => remove(i.variantId)} className="text-xs text-smoke underline hover:text-paper">Eliminar</button>
               </div>
             </div>
@@ -57,11 +60,14 @@ export function CartView({ shippingFlatRate, freeShippingFrom, whatsappNumber }:
       <aside className="h-fit border border-line bg-coal p-6 lg:col-span-4">
         <dl className="space-y-2 text-sm">
           <div className="flex justify-between text-bone/70"><dt>Subtotal</dt><dd>{formatCOP(t.subtotal)}</dd></div>
-          <div className="flex justify-between text-bone/70"><dt>Envío</dt><dd>{t.shipping === 0 ? "Gratis" : formatCOP(t.shipping)}</dd></div>
+          <div className="flex justify-between text-bone/70"><dt>Artículos</dt><dd>{t.count}</dd></div>
+          {t.savings > 0 && <div className="flex justify-between text-crimson"><dt>Ahorras</dt><dd>−{formatCOP(t.savings)}</dd></div>}
+          <div className="flex justify-between text-bone/70"><dt>Envío</dt><dd>{t.shipping === 0 ? "Gratis" : `Desde ${formatCOP(t.shipping)}`}</dd></div>
           {freeShippingFrom && t.subtotal < freeShippingFrom && (
             <p className="text-xs text-smoke">Te faltan {formatCOP(freeShippingFrom - t.subtotal)} para envío gratis.</p>
           )}
-          <div className="flex justify-between border-t border-line pt-3 font-display text-xl"><dt>Total</dt><dd>{formatCOP(t.total)}</dd></div>
+          <div className="flex justify-between border-t border-line pt-3 font-display text-xl"><dt>Total estimado</dt><dd>{formatCOP(t.total)}</dd></div>
+          <p className="text-[11px] text-smoke">El envío exacto depende de tu ciudad y se confirma en el checkout.</p>
         </dl>
         {hasDemo && <p className="mt-4 text-sm text-crimson">Tu carrito tiene productos DEMO: elimínalos para pagar.</p>}
         {hasDemo ? (
