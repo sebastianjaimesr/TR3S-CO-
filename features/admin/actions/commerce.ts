@@ -77,31 +77,30 @@ export async function setShippingQuote(form: FormData) {
 }
 
 /* ------------------------------- Home media ------------------------------ */
-const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/avif"];
 
-export async function saveHomeMedia(form: FormData) {
+/**
+ * Publishes a home image slot after a direct browser upload to the `campaigns`
+ * bucket (server actions cap request bodies at 1 MB, so files never pass
+ * through here). With `path` null only the description is updated.
+ */
+export async function registerHomeMedia(input: { slot: string; path: string | null; alt: string }): Promise<{ ok: boolean; error?: string }> {
   const staff = await requireStaff(["admin"]);
-  const slot = str(form, "slot");
-  const back = "/admin/home";
-  if (!homeMediaSlots.some((s) => s.slot === slot)) fail(back, "Espacio de imagen desconocido.");
-  const file = form.get("image");
+  const slot = String(input.slot ?? "");
+  const alt = String(input.alt ?? "").trim().slice(0, 160);
+  if (!homeMediaSlots.some((s) => s.slot === slot)) return { ok: false, error: "Espacio de imagen desconocido." };
+  if (!alt) return { ok: false, error: "Describe la imagen (texto alternativo); en el hero también es el nombre que se muestra." };
   let url: string | null = null;
-  if (file instanceof File && file.size > 0) {
-    if (file.size > 5 * 1024 * 1024 || !IMAGE_TYPES.includes(file.type)) fail(back, "Imagen JPG, PNG, WEBP o AVIF de máximo 5 MB.");
-    const path = `home/${slot}-${crypto.randomUUID()}.${file.type.split("/")[1]}`;
-    const { error } = await staff.sb.storage.from("campaigns").upload(path, file, { contentType: file.type });
-    if (error) fail(back, error.message);
-    url = staff.sb.storage.from("campaigns").getPublicUrl(path).data.publicUrl;
+  if (input.path) {
+    if (!input.path.startsWith(`home/${slot}-`) || input.path.includes("..")) return { ok: false, error: "Ruta de imagen no permitida." };
+    url = staff.sb.storage.from("campaigns").getPublicUrl(input.path).data.publicUrl;
   }
-  const alt = str(form, "alt");
   const { data: existing } = await staff.sb.from("home_media").select("image_url").eq("slot", slot).maybeSingle();
   const image_url = url ?? existing?.image_url ?? null;
-  if (!image_url) fail(back, "Sube una imagen.");
-  if (!alt) fail(back, "Describe la imagen (texto alternativo) para accesibilidad y SEO.");
+  if (!image_url) return { ok: false, error: "Sube una imagen." };
   const { error } = await staff.sb.from("home_media").upsert({ slot, image_url, alt, updated_at: new Date().toISOString() });
-  if (error) fail(back, dbError(error.message));
+  if (error) return { ok: false, error: dbError(error.message) };
   refreshCatalog();
-  done(back, "Imagen publicada en el inicio.");
+  return { ok: true };
 }
 
 export async function clearHomeMedia(form: FormData) {

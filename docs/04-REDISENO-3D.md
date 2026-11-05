@@ -58,3 +58,10 @@ Pruebas: `tests/sql/03_newsletter_bestsellers.sql`.
 5. El visor 360° de la página de producto lo carga automáticamente (`features/three/ProductViewer.tsx`, con zoom y arrastre). Si el producto no tiene GLB, se muestran sus fotos; nunca se finge un 3D.
 
 Cambiar el concepto del hero (colores o textos): `features/home/HeroStage.tsx` (`conceptColorways`).
+
+## Escenario del hero (tres protagonistas)
+
+- Se construye con tres fotos del dueño subidas en **/admin/home**: `Hero · protagonista central` (Air Max 97), `Hero · lado izquierdo` (Air Max Plus TN) y `Hero · lado derecho` (Dunk Low Panda). Aparece cuando existe la foto central; si no, el hero muestra el producto destacado o el logo.
+- Las fotos deben estar **recortadas, sin fondo** (PNG o WEBP), mínimo 1600–2000 px y cada una en un ángulo distinto. El admin avisa si la foto tiene fondo o es de baja resolución y recorta solo los márgenes transparentes para que la suela quede sobre el pedestal. La subida va directo a Storage (sin el límite de 1 MB de las server actions).
+- El escenario (pedestales de piedra, aros de luz roja, humo, reflejos y sombras) es CSS/SVG: no redibuja, deforma ni reemplaza el zapato. Animaciones: entrada GSAP, flotación suave, parallax y luz que sigue el mouse, hover con nombre del modelo y hundimiento al hacer scroll (solo escritorio). Con `prefers-reduced-motion` todo queda estático; en celular el humo y los brillos son más livianos.
+- Usa solo fotos propias de tu inventario o material con permiso del proveedor. No uses fotos oficiales de Nike descargadas de internet.

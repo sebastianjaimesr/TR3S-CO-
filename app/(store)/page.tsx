@@ -7,6 +7,7 @@ import { BrandStory, BrandsStrip, CatalogPending, CategoryGrid, FutureCollection
 import { getAllProducts, getBestSellerIds, getBrands, getHeroData, getHomeMedia, getStoreSettings } from "@/services/catalog";
 import { availableProviders } from "@/services/payments/providers";
 import type { Product } from "@/types/domain";
+import { heroStageSlots } from "@/lib/home-media";
 
 export const revalidate = 60;
 
@@ -37,9 +38,15 @@ export default async function HomePage() {
   // Hero spotlight: a real product with its own photo (featured first, then newest).
   const spotlight = [...featured, ...newArrivals, ...all].find((p) => p.images.length > 0);
 
+  // Hero stage: the owner's three cut-out protagonist photos (left, center, right).
+  const stage = heroStageSlots.flatMap((slot) => {
+    const m = media[slot];
+    return m ? [{ slot, url: m.url, alt: m.alt, href: `/search?q=${encodeURIComponent(m.alt)}` }] : [];
+  });
+
   return (
     <>
-      <BrandHero photo={media.hero} spotlight={spotlight} />
+      <BrandHero photo={media.hero} spotlight={spotlight} stage={stage} />
       <Marquee />
       <CategoryGrid media={media} />
       {products.length > 0 && <Hero campaign={campaign} products={products} />}
