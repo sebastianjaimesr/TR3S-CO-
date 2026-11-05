@@ -245,3 +245,19 @@ export const getHomeMedia = unstable_cache(
   ["home-media"],
   { revalidate: 60, tags: [CATALOG_TAG] },
 );
+
+/**
+ * Product ids ranked by units sold in paid orders (last 90 days).
+ * Empty until there are real sales: the home rail stays hidden until then.
+ */
+export const getBestSellerIds = unstable_cache(
+  async (): Promise<string[]> => {
+    const sb = supabasePublic();
+    if (!sb) return [];
+    const { data, error } = await sb.rpc("best_selling_products", { p_limit: 8, p_days: 90 });
+    if (error) return []; // function not deployed yet or transient error: hide the rail
+    return ((data ?? []) as { product_id: string }[]).map((r) => r.product_id);
+  },
+  ["best-sellers"],
+  { revalidate: 300, tags: [CATALOG_TAG] },
+);

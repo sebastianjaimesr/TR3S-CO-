@@ -100,9 +100,9 @@ export function CategoryGrid({ media }: { media: HomeMedia }) {
 }
 
 /** A product rail. It only ever renders real catalog products; the empty state says so honestly. */
-export function ProductRail({ id, eyebrow, title, products, href }: { id: string; eyebrow: string; title: string; products: Product[]; href: string }) {
+export function ProductRail({ id, eyebrow, title, products, href, accent }: { id: string; eyebrow: string; title: string; products: Product[]; href: string; accent?: boolean }) {
   return (
-    <section aria-labelledby={id} className="border-t border-line py-20 md:py-28">
+    <section aria-labelledby={id} className={cn("border-t border-line py-20 md:py-28", accent && "bg-gradient-to-b from-wine/25 to-transparent")}>
       <div className={container}>
         <SectionTitle
           eyebrow={eyebrow}
@@ -124,7 +124,7 @@ export function ProductRail({ id, eyebrow, title, products, href }: { id: string
   );
 }
 
-function CatalogComingSoon() {
+export function CatalogComingSoon() {
   return (
     <div className="relative overflow-hidden border border-dashed border-line p-8 md:p-14">
       <div aria-hidden className="stripes absolute inset-0" />
@@ -153,7 +153,7 @@ export function PromoBanner({ photo }: { photo?: { url: string; alt: string } })
           <div aria-hidden className="absolute inset-0 -z-10 bg-ink/65" />
         </>
       ) : (
-        <div aria-hidden className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_70%_50%,rgba(208,20,44,0.45),transparent_60%)]" />
+        <div aria-hidden className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_70%_50%,rgba(213,0,37,0.45),transparent_60%)]" />
       )}
       <p aria-hidden className="headline text-outline pointer-events-none absolute -bottom-6 right-0 select-none whitespace-nowrap text-[26vw] leading-none opacity-40">TR3S</p>
       <div className={cn(container, "relative py-24 md:py-36")}>
@@ -171,12 +171,6 @@ export function PromoBanner({ photo }: { photo?: { url: string; alt: string } })
   );
 }
 
-const pillars = [
-  { word: "ESENCIA", text: "Tres amigos, tres miradas y una misma visión: calzado auténtico elegido con criterio." },
-  { word: "ESTILO", text: "Cultura sneaker, moda deportiva y calle. Lo que llevas puesto habla antes que tú." },
-  { word: "VISAJE", text: "La actitud con la que pisas. Sin poses, con identidad." },
-];
-
 export function BrandStory({ photo }: { photo?: { url: string; alt: string } }) {
   return (
     <section aria-labelledby="story-title" className="border-t border-line py-20 md:py-28">
@@ -187,7 +181,7 @@ export function BrandStory({ photo }: { photo?: { url: string; alt: string } }) 
               <Image src={photo.url} alt={photo.alt} fill sizes="(max-width: 1024px) 100vw, 40vw" className="object-cover" />
             ) : (
               <div className="stripes grid h-full place-items-center">
-                <div className="shadow-[0_30px_80px_-20px_rgba(208,20,44,0.5)]">
+                <div className="shadow-[0_30px_80px_-20px_rgba(213,0,37,0.5)]">
                   <Logo size={200} href={null} />
                 </div>
               </div>
@@ -201,17 +195,6 @@ export function BrandStory({ photo }: { photo?: { url: string; alt: string } }) 
             <h2 id="story-title" className="headline text-5xl md:text-7xl">{site.slogan}</h2>
             <p className="mt-6 max-w-2xl text-lg leading-relaxed text-bone/75">{site.concept}</p>
           </Reveal>
-          <div className="mt-10 grid gap-6 sm:grid-cols-3">
-            {pillars.map((p, i) => (
-              <Reveal key={p.word} delay={i * 0.1}>
-                <div className="border-t-2 border-crimson pt-4">
-                  <p className="font-display text-xs tracking-[0.3em] text-smoke">0{i + 1}</p>
-                  <h3 className="headline mt-2 text-3xl">{p.word}</h3>
-                  <p className="mt-3 text-sm leading-relaxed text-bone/70">{p.text}</p>
-                </div>
-              </Reveal>
-            ))}
-          </div>
           <Link href="/about" className="link-underline mt-10 inline-flex items-center gap-2 pb-1 text-sm tracking-[0.15em]">
             CONOCE LA HISTORIA <ArrowIcon />
           </Link>
@@ -296,6 +279,18 @@ export function TrustStrip({ payments }: { payments: string }) {
             <p className="mt-2 text-sm text-smoke">{d}</p>
           </Link>
         ))}
+      </div>
+    </section>
+  );
+}
+
+/** Shown once, instead of every rail, while the official catalog is empty. */
+export function CatalogPending() {
+  return (
+    <section aria-labelledby="pending-title" className="border-t border-line py-20 md:py-28">
+      <div className={container}>
+        <SectionTitle eyebrow="Tienda" title="Lanzamientos" id="pending-title" />
+        <CatalogComingSoon />
       </div>
     </section>
   );

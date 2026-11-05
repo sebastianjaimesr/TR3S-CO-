@@ -18,6 +18,7 @@ const nav: { href: string; label: string; roles: Role[] }[] = [
   { href: "/admin/suppliers", label: "Proveedores", roles: ["inventory", "sales"] },
   { href: "/admin/brands", label: "Marcas", roles: ["inventory"] },
   { href: "/admin/customers", label: "Clientes", roles: ["sales"] },
+  { href: "/admin/newsletter", label: "Newsletter", roles: ["sales"] },
   { href: "/admin/home", label: "Contenido del inicio", roles: ["admin"] },
   { href: "/admin/campaigns", label: "Campañas", roles: ["admin"] },
   { href: "/admin/settings", label: "Configuración", roles: ["admin"] },

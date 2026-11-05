@@ -5,6 +5,7 @@ import type { Product } from "@/types/domain";
 import { AvailabilityBadge, NoPhoto, Price, ProductFlags, QuickAdd } from "@/features/catalog/bits";
 import { productAvailability, shortestLeadTime } from "@/services/availability";
 import { useWishlist } from "@/features/wishlist/store";
+import { toast } from "@/features/ui/toast";
 import { HeartIcon } from "@/components/icons";
 import { useHydrated } from "@/hooks/useHydrated";
 
@@ -20,7 +21,10 @@ export function ProductCard({ product, priority }: { product: Product; priority?
       <div className="absolute left-3 top-3 z-10"><ProductFlags product={product} /></div>
       <button
         type="button"
-        onClick={() => toggle({ productId: product.id, slug: product.slug })}
+        onClick={() => {
+          toggle({ productId: product.id, slug: product.slug });
+          toast(wished ? "Quitado de favoritos" : "Guardado en favoritos", { description: product.name, tone: wished ? "default" : "success" });
+        }}
         aria-pressed={hydrated && wished}
         aria-label={wished ? `Quitar ${product.name} de wishlist` : `Guardar ${product.name} en wishlist`}
         className="absolute right-2 top-2 z-10 grid h-10 w-10 place-items-center text-paper/80 hover:text-crimson"

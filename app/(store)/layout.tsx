@@ -4,6 +4,8 @@ import { WhatsAppFloat } from "@/components/WhatsAppFloat";
 import { DemoBanner } from "@/components/DemoBanner";
 import { ConsentAnalytics } from "@/components/ConsentAnalytics";
 import { CartDrawer } from "@/features/cart/CartDrawer";
+import { Toaster } from "@/features/ui/Toaster";
+import { Cursor } from "@/components/Cursor";
 import { getStoreSettings, isDemoMode } from "@/services/catalog";
 
 export default async function StoreLayout({ children }: { children: React.ReactNode }) {
@@ -20,6 +22,8 @@ export default async function StoreLayout({ children }: { children: React.ReactN
       <CartDrawer whatsappNumber={settings.whatsappNumber} shippingFlatRate={settings.shippingFlatRate} freeShippingFrom={settings.freeShippingFrom} />
       <WhatsAppFloat number={settings.whatsappNumber} />
       <ConsentAnalytics />
+      <Toaster />
+      <Cursor />
     </>
   );
 }
