@@ -22,7 +22,7 @@ export function PayPanel({ number, token, total, providers, current, retry }: { 
       <div className="space-y-2" role="radiogroup" aria-label="Método de pago">
         {providers.map((p) => (
           <label key={p.id} className={cn("flex cursor-pointer gap-3 border p-3 text-sm", method === p.id ? "border-paper bg-graphite/40" : "border-line")}>
-            <input type="radio" name="method" checked={method === p.id} onChange={() => setMethod(p.id)} className="mt-1 accent-[#d0142c]" />
+            <input type="radio" name="method" checked={method === p.id} onChange={() => setMethod(p.id)} className="mt-1 accent-[#d50025]" />
             <span>
               <span className="font-display font-semibold">{p.label}</span>
               {p.sandbox && <span className="ml-2 text-[9px] tracking-[0.15em] text-amber-300">MODO PRUEBAS</span>}

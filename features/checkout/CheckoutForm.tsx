@@ -169,7 +169,7 @@ export function CheckoutForm({ shippingFlatRate, freeShippingFrom, providers, da
             <div className="space-y-2" role="radiogroup" aria-label="Método de pago">
               {providers.map((m) => (
                 <label key={m.id} className={cn("flex cursor-pointer gap-4 border p-4 transition-colors", method === m.id ? "border-paper bg-graphite/40" : "border-line hover:border-paper/40")}>
-                  <input type="radio" name="paymentMethod" value={m.id} checked={method === m.id} onChange={() => setMethod(m.id)} className="mt-1 accent-[#d0142c]" />
+                  <input type="radio" name="paymentMethod" value={m.id} checked={method === m.id} onChange={() => setMethod(m.id)} className="mt-1 accent-[#d50025]" />
                   <span className="min-w-0">
                     <span className="flex flex-wrap items-center gap-2 font-display font-semibold">
                       {m.label}
@@ -186,7 +186,7 @@ export function CheckoutForm({ shippingFlatRate, freeShippingFrom, providers, da
         </Step>
         <div>{field("couponCode", "Cupón (opcional)", { autoComplete: "off" })}</div>
         <label className="flex items-start gap-3 text-sm text-bone/80">
-          <input type="checkbox" name="acceptPolicies" className="mt-1 h-4 w-4 accent-[#d0142c]" />
+          <input type="checkbox" name="acceptPolicies" className="mt-1 h-4 w-4 accent-[#d50025]" />
           <span>
             Acepto los <Link href="/policies/terminos" className="underline" target="_blank">términos</Link>, la{" "}
             <Link href="/policies/privacidad" className="underline" target="_blank">política de datos</Link> y la{" "}

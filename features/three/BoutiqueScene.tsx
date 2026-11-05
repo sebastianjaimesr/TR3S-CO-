@@ -98,10 +98,10 @@ function Room({ lowPower }: { lowPower: boolean }) {
       ))}
       <mesh position={[0, 6.2, -3.9]}>
         <boxGeometry args={[15, 0.05, 0.05]} />
-        <meshBasicMaterial color="#a52632" toneMapped={false} />
+        <meshBasicMaterial color="#d50025" toneMapped={false} />
       </mesh>
       <spotLight position={[0, 7, 4]} angle={0.7} penumbra={0.9} intensity={70} castShadow={!lowPower} shadow-mapSize={[1024, 1024]} />
-      <pointLight position={[0, 3, -3]} color="#a52632" intensity={8} />
+      <pointLight position={[0, 3, -3]} color="#d50025" intensity={8} />
     </group>
   );
 }
@@ -123,7 +123,7 @@ function Plinth({ x, item, active, onSelect, castShadow }: { x: number; item: Bo
       </mesh>
       <mesh position={[0, 1.005, 0]}>
         <boxGeometry args={[1.52, 0.01, 1.52]} />
-        <meshBasicMaterial color={active ? "#a52632" : "#2f2f2f"} toneMapped={false} />
+        <meshBasicMaterial color={active ? "#d50025" : "#2f2f2f"} toneMapped={false} />
       </mesh>
       <group
         ref={ref}

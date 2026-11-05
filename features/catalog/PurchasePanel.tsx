@@ -7,6 +7,7 @@ import { AvailabilityBadge, Price, ProductFlags } from "@/features/catalog/bits"
 import { availabilityHelp, productAvailability, shortestLeadTime } from "@/services/availability";
 import { useCart } from "@/features/cart/store";
 import { useWishlist } from "@/features/wishlist/store";
+import { toast } from "@/features/ui/toast";
 import { useHydrated } from "@/hooks/useHydrated";
 import { productInquiryMessage, whatsappLink } from "@/services/whatsapp";
 import { HeartIcon, WhatsappIcon } from "@/components/icons";
@@ -149,7 +150,10 @@ export function PurchasePanel({ product, whatsappNumber, initialSize }: { produc
         <button type="button" onClick={() => doAdd(true)} disabled={!purchasable} className="btn btn-accent" title={product.isDemo ? "Producto DEMO" : undefined}>
           Buy now
         </button>
-        <button type="button" onClick={() => toggleWish({ productId: product.id, slug: product.slug })} aria-pressed={hydrated && wished} className="btn btn-ghost">
+        <button type="button" onClick={() => {
+            toggleWish({ productId: product.id, slug: product.slug });
+            toast(wished ? "Quitado de favoritos" : "Guardado en favoritos", { description: product.name, tone: wished ? "default" : "success" });
+          }} aria-pressed={hydrated && wished} className="btn btn-ghost">
           <HeartIcon width={16} filled={hydrated && wished} /> {hydrated && wished ? "En wishlist" : "Add to wishlist"}
         </button>
         {wa ? (

@@ -7,9 +7,12 @@
   --color-smoke: #888888;
   --color-paper: #ffffff;
   --color-bone: #f5f3ef;
-  /* Brand red taken from the "3" of the TR3S logo, plus a brighter accent for UI states */
-  --color-wine: #8e1220;
-  --color-crimson: #d0142c;
+  /* Brand red #D50025 (TR3S red) plus a deep variant for pressed/accents */
+  --color-wine: #8c0019;
+  --color-crimson: #d50025;
+  /* Metallic greys for secondary details */
+  --color-metal: #a8adb5;
+  --color-steel: #5c6169;
   --color-line: rgb(255 255 255 / 0.1);
 
   --font-display: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
@@ -236,5 +239,44 @@
   .prose-tr3s ul {
     list-style: disc;
     padding-left: 1.25rem;
+  }
+}
+
+@layer components {
+  .tr3s-cursor {
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 95;
+    width: 28px;
+    height: 28px;
+    border: 1.5px solid var(--color-crimson);
+    border-radius: 9999px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s, background-color 0.3s, border-color 0.3s;
+    will-change: transform;
+  }
+  .tr3s-cursor[data-hover="1"] {
+    background-color: rgb(213 0 37 / 0.12);
+    border-color: var(--color-paper);
+  }
+  .skeleton {
+    position: relative;
+    overflow: hidden;
+    background: var(--color-coal);
+  }
+  .skeleton::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.05), transparent);
+    animation: shimmer 1.4s infinite;
+  }
+  @keyframes shimmer {
+    to {
+      transform: translateX(100%);
+    }
   }
 }
