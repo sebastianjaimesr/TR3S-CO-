@@ -154,7 +154,7 @@ function Sneaker({ colorway, reducedMotion, lowPower, progress }: { colorway: Co
         pointer.current.lastX = e.nativeEvent.clientX;
       }}
     >
-      <ConceptSneaker colorway={colorway} castShadow={!lowPower} />
+      <ConceptSneaker colorway={colorway} castShadow={!lowPower} quality={lowPower ? "low" : "high"} />
     </group>
   );
 }
