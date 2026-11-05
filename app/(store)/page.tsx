@@ -7,7 +7,7 @@ import { BrandStory, BrandsStrip, CatalogPending, CategoryGrid, FutureCollection
 import { getAllProducts, getBestSellerIds, getBrands, getHeroData, getHomeMedia, getStoreSettings } from "@/services/catalog";
 import { availableProviders } from "@/services/payments/providers";
 import type { Product } from "@/types/domain";
-import { heroStageSlots } from "@/lib/home-media";
+import { defaultHeroStage, heroStageSlots } from "@/lib/home-media";
 
 export const revalidate = 60;
 
@@ -39,8 +39,10 @@ export default async function HomePage() {
   const spotlight = [...featured, ...newArrivals, ...all].find((p) => p.images.length > 0);
 
   // Hero stage: the owner's three cut-out protagonist photos (left, center, right).
+  // Uploaded photos win; until the central one exists the default cut-outs are used.
+  const source = media["hero-centro"] ? media : defaultHeroStage;
   const stage = heroStageSlots.flatMap((slot) => {
-    const m = media[slot];
+    const m = source[slot];
     return m ? [{ slot, url: m.url, alt: m.alt, href: `/search?q=${encodeURIComponent(m.alt)}` }] : [];
   });
 

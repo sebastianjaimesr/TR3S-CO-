@@ -24,3 +24,13 @@ export type HeroStageSlot = (typeof heroStageSlots)[number];
 export type HomeMediaSlot = (typeof homeMediaSlots)[number]["slot"];
 
 export type HomeMedia = Partial<Record<HomeMediaSlot, { url: string; alt: string }>>;
+
+/**
+ * Hero stage shown until the owner uploads their own photos in /admin/home.
+ * Cut-outs of the photos the owner provided (stored in public/hero).
+ */
+export const defaultHeroStage: Partial<Record<HeroStageSlot, { url: string; alt: string }>> = {
+  "hero-centro": { url: "/hero/am97-white.webp", alt: "Nike Air Max 97 Blanco" },
+  "hero-izquierda": { url: "/hero/tn-black.webp", alt: "Nike Air Max Plus TN Negro" },
+  "hero-derecha": { url: "/hero/tn-red.webp", alt: "Nike Air Max Plus TN Negro/Rojo" },
+};
