@@ -34,10 +34,12 @@ export default async function HomePage() {
   const women = all.filter((p) => p.gender === "women" || p.gender === "unisex").slice(0, RAIL);
   const payments = availableProviders(settings.paymentMethods).map((p) => p.label);
   const hasCatalog = all.length > 0;
+  // Hero spotlight: a real product with its own photo (featured first, then newest).
+  const spotlight = [...featured, ...newArrivals, ...all].find((p) => p.images.length > 0);
 
   return (
     <>
-      <BrandHero photo={media.hero} />
+      <BrandHero photo={media.hero} spotlight={spotlight} />
       <Marquee />
       <CategoryGrid media={media} />
       {products.length > 0 && <Hero campaign={campaign} products={products} />}

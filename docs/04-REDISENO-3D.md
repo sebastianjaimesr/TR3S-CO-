@@ -1,11 +1,29 @@
-# TR3S & CO. — Rediseño 3D (entrega A)
+# TR3S & CO. — Rediseño visual (entrega A)
+
+> **Actualización 2026-11-05 · Realismo antes que efectos.** Por directiva de la marca, el sneaker 3D generado por código se retiró del hero. Las tiendas muestran **fotografías reales** de cada producto; el 3D solo aparece cuando existe el **GLB oficial** de esa referencia. El modelo conceptual (`ConceptSneaker`) queda únicamente para el catálogo DEMO de desarrollo y siempre rotulado como tal.
+
+## Fotografía de producto
+
+- **Hero:** muestra la foto principal de un producto real (destacado primero, luego el más nuevo) sobre un panel de estudio claro, con flotación sutil e inclinación con el cursor. Sin productos fotografiados, se ve la composición con el logo oficial (nunca un zapato inventado).
+- **Tarjetas:** fondo de estudio `#ECECEC` (combina con fotos de fondo blanco o gris), zoom suave y cambio a la segunda foto al pasar el cursor.
+- **Galería:** foto grande con lupa al pasar el cursor, deslizamiento en móvil, pantalla completa con flechas y teclado, y la vista (lateral, suela…) como pie de foto.
+- **Admin (`/admin/products/[id]`):** se suben varias fotos a la vez directamente a Supabase Storage (sin el límite de 4.5 MB de Vercel). Cada foto se etiqueta con su vista y la galería se ordena sola: lateral → medial → frontal → trasera → superior → suela → detalle → lifestyle. Si una foto pesa más de 5 MB o mide más de 2800 px se optimiza a WEBP en el navegador; si mide menos de 1600 px se avisa que se verá menos nítida.
+- **Guía de fotos:** fondo blanco o gris claro uniforme, luz de estudio suave (caja de luz grande arriba + rebotes laterales), cámara a la altura del zapato, mínimo 2000 px en el lado largo, sin filtros. Solo fotos propias o autorizadas por el proveedor.
+
+## Visor 360° con GLB oficial
+
+`features/three/ProductViewer.tsx`: materiales PBR tal como vienen en el GLB (albedo, normal, roughness/metalness, AO), entorno de estudio con softboxes, tone mapping AgX, sombra de piso acumulada (físicamente suave), rotación 360°, zoom con rueda o pellizco. El GLB se sube desde el admin (bucket `models`, máx. 15 MB).
+
+---
+
+## Historial: primera versión de la entrega A
 
 ## Qué cambia
 
 | Área | Cambio |
 |---|---|
 | Paleta | Rojo de marca `#D50025` (`crimson`), rojo profundo `#8C0019` (`wine`), grises metálicos `metal` `#A8ADB5` y `steel` `#5C6169`. Negro `#050505` y blanco sin cambios. |
-| Hero | El eslogan TU ESTILO. / TU ESENCIA. (contorno) / TU CAMINO. (rojo) sobre rayas diagonales se conserva. A la derecha (debajo en móvil) aparece **TR3S CONCEPT 001**, un sneaker 3D original construido por código, con flotación, luz cinematográfica, halo rojo, partículas, rotación con mouse/arrastre táctil y tres colores (Esencia, Estilo, Visaje). Al hacer scroll el modelo gira, sube y la cámara se acerca; los textos salen a distinta velocidad (profundidad). |
+| Hero (retirado el 3D) | El eslogan TU ESTILO. / TU ESENCIA. (contorno) / TU CAMINO. (rojo) sobre rayas diagonales se conserva. A la derecha (debajo en móvil) aparece **TR3S CONCEPT 001**, un sneaker 3D original construido por código, con flotación, luz cinematográfica, halo rojo, partículas, rotación con mouse/arrastre táctil y tres colores (Esencia, Estilo, Visaje). Al hacer scroll el modelo gira, sube y la cámara se acerca; los textos salen a distinta velocidad (profundidad). |
 | Manifiesto | Nueva sección ESENCIA · ESTILO · VISAJE. En escritorio se fija en pantalla y cada palabra toma protagonismo con el scroll; en móvil y con movimiento reducido es una lista normal. |
 | Home | Rieles: Nuevos lanzamientos, Sneakers destacados, Ofertas, Hombre, Mujer y Más vendidos. **Cada riel solo aparece si tiene productos reales**; con el catálogo vacío se ve un único bloque "Catálogo oficial en preparación". |
 | Newsletter | Formulario con consentimiento explícito (Ley 1581), honeypot y límite de intentos. Lista en `/admin/newsletter`. |

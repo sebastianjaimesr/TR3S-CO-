@@ -3,17 +3,18 @@ import Link from "next/link";
 import { Logo } from "@/components/Logo";
 import { ArrowIcon } from "@/components/icons";
 import { site } from "@/lib/site";
-import { HeroStage } from "@/features/home/HeroStage";
+import { HeroShowcase } from "@/features/home/HeroShowcase";
+import type { Product } from "@/types/domain";
 
 const ring = "ESENCIA · ESTILO · VISAJE · TR3S & CO. · ";
 
 /**
- * Brand-first hero. It never shows a product or a price. The headline is
- * server-rendered (LCP); the TR3S CONCEPT 3D sneaker mounts on top once the
- * page is idle, with the official logo composition as the no-WebGL fallback.
+ * Brand-first hero. Realism before effects: the spotlight is always a REAL
+ * catalog product shown with its own studio photo (never a generated model).
+ * With no photographed product yet, the official logo composition is shown.
  * A hero photo uploaded in /admin/home becomes the background.
  */
-export function BrandHero({ photo }: { photo?: { url: string; alt: string } }) {
+export function BrandHero({ photo, spotlight }: { photo?: { url: string; alt: string }; spotlight?: Product }) {
   return (
     <section aria-labelledby="hero-title" className="grain relative isolate overflow-hidden bg-ink">
       {photo ? (
@@ -29,18 +30,18 @@ export function BrandHero({ photo }: { photo?: { url: string; alt: string } }) {
 
       <div className="mx-auto grid max-w-[1600px] items-center gap-6 px-4 pb-16 pt-10 md:px-8 lg:min-h-[calc(100svh-112px)] lg:grid-cols-12 lg:gap-10 lg:py-16">
         <div className="relative z-10 lg:col-span-6 xl:col-span-7">
-          <div data-depth="0.6">
+          <div>
             <p className="eyebrow hero-line mb-6 flex items-center gap-3">
               <span className="inline-block h-px w-10 bg-crimson" aria-hidden />
               Sneakers · Streetwear · Deportivo
             </p>
           </div>
           <h1 id="hero-title" className="headline text-[17vw] text-paper sm:text-[12vw] lg:text-[7vw] 2xl:text-[8.5rem]">
-            <span data-depth="1" className="block"><span className="hero-line block" style={{ animationDelay: "0ms" }}>Tu estilo.</span></span>
-            <span data-depth="1.4" className="block"><span className="hero-line block text-outline" style={{ animationDelay: "120ms" }}>Tu esencia.</span></span>
-            <span data-depth="1.8" className="block"><span className="hero-line block text-crimson" style={{ animationDelay: "240ms" }}>Tu camino.</span></span>
+            <span className="block"><span className="hero-line block" style={{ animationDelay: "0ms" }}>Tu estilo.</span></span>
+            <span className="block"><span className="hero-line block text-outline" style={{ animationDelay: "120ms" }}>Tu esencia.</span></span>
+            <span className="block"><span className="hero-line block text-crimson" style={{ animationDelay: "240ms" }}>Tu camino.</span></span>
           </h1>
-          <div data-depth="0.8">
+          <div>
             <p className="hero-line mt-8 max-w-lg text-base leading-relaxed text-bone/75 md:text-lg" style={{ animationDelay: "380ms" }}>
               {site.concept}
             </p>
@@ -56,8 +57,10 @@ export function BrandHero({ photo }: { photo?: { url: string; alt: string } }) {
         </div>
 
         <div className="lg:col-span-6 xl:col-span-5">
-          <HeroStage>
-            <div aria-hidden className="relative grid h-full w-full place-items-center">
+          {spotlight ? (
+            <HeroShowcase product={spotlight} />
+          ) : (
+            <div aria-hidden className="relative mx-auto grid aspect-square w-full max-w-[min(86vw,520px)] place-items-center">
               <svg viewBox="0 0 400 400" className="spin-slow absolute inset-[6%] h-[88%] w-[88%] text-bone/40">
                 <defs>
                   <path id="hero-ring" d="M200,200 m-170,0 a170,170 0 1,1 340,0 a170,170 0 1,1 -340,0" />
@@ -72,7 +75,7 @@ export function BrandHero({ photo }: { photo?: { url: string; alt: string } }) {
                 <Logo size={200} href={null} priority />
               </div>
             </div>
-          </HeroStage>
+          )}
         </div>
       </div>
 
