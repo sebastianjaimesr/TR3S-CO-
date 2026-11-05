@@ -44,7 +44,8 @@ function mapProduct(row: any, avail: Map<string, any>): Product {
     isActive: row.is_active,
     isDemo: row.is_demo,
     modelUrl: row.model_url,
-    conceptColorway: row.concept_colorway,
+    // The procedural concept render is only for DEMO data; real products use photos or an authorized GLB.
+    conceptColorway: row.is_demo ? row.concept_colorway : null,
     createdAt: row.created_at,
     images: (row.images ?? [])
       .sort((a: any, b: any) => a.position - b.position)

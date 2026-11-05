@@ -46,7 +46,7 @@ export function ProductFlags({ product }: { product: Product }) {
   return (
     <span className="flex gap-1.5">
       {product.isDemo && <Flag className="bg-paper text-ink">DEMO</Flag>}
-      {product.isNew && <Flag className="border border-paper/40 text-paper">NEW</Flag>}
+      {product.isNew && <Flag className="bg-ink text-paper">NEW</Flag>}
       {sale && <Flag className="bg-wine text-paper">SALE</Flag>}
     </span>
   );

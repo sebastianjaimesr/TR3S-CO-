@@ -4,7 +4,8 @@ import { notFound } from "next/navigation";
 import { requireStaff, can } from "@/lib/auth";
 import { PageHeader, Flash, Table, Td, Field, Pill, Notice } from "@/features/admin/ui";
 import { ProductForm } from "@/features/admin/ProductForm";
-import { addSizeRun, deleteImage, deleteProduct, endPromotion, saveVariant, startPromotion, uploadImage } from "@/features/admin/actions/products";
+import { addSizeRun, deleteImage, deleteProduct, endPromotion, saveVariant, startPromotion } from "@/features/admin/actions/products";
+import { ImageUploader, ModelUploader } from "@/features/admin/MediaUploader";
 import { formatCOP } from "@/lib/format";
 import { availabilityLabel } from "@/services/availability";
 
@@ -44,7 +45,7 @@ export default async function EditProduct({ params, searchParams }: { params: Pr
 
       <section className="mt-12">
         <h2 className="mb-3 font-display text-lg font-semibold">Fotografías</h2>
-        <p className="mb-4 text-xs text-smoke">Solo fotos propias o autorizadas por el proveedor. Fondo neutro, mínimo 1200 px.</p>
+        <p className="mb-4 text-xs text-smoke">Solo fotos reales propias o autorizadas por el proveedor. Recomendado: lateral, medial, frontal, trasera, superior, suela y una lifestyle; fondo blanco o gris claro uniforme, luz de estudio suave, mínimo 2000 px en el lado largo. La primera foto (vista lateral) es la portada y aparece en el inicio.</p>
         <div className="flex flex-wrap gap-3">
           {images?.map((im) => (
             <form key={im.id} action={deleteImage} className="relative h-32 w-32 border border-line bg-coal">
@@ -55,12 +56,8 @@ export default async function EditProduct({ params, searchParams }: { params: Pr
             </form>
           ))}
         </div>
-        <form action={uploadImage} className="mt-4 flex flex-wrap items-end gap-3">
-          <input type="hidden" name="product_id" value={id} />
-          <div><label className="field-label" htmlFor="file">Imagen</label><input id="file" name="file" type="file" accept="image/jpeg,image/png,image/webp,image/avif" required className="text-sm" /></div>
-          <Field label="Texto alternativo" name="alt" placeholder="Vista lateral, color negro" />
-          <button className="btn btn-ghost h-12">Subir</button>
-        </form>
+        <ImageUploader productId={id} />
+        <ModelUploader productId={id} current={product.model_url ?? null} />
       </section>
 
       <section className="mt-12">

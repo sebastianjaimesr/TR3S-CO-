@@ -120,26 +120,6 @@ export async function addSizeRun(form: FormData) {
   done(back, `${rows.length} variantes creadas.`);
 }
 
-export async function uploadImage(form: FormData) {
-  const staff = await requireStaff(["inventory"]);
-  const productId = str(form, "product_id");
-  const back = `/admin/products/${productId}`;
-  const file = form.get("file");
-  if (!(file instanceof File) || file.size === 0) fail(back, "Selecciona una imagen.");
-  if (file.size > 5 * 1024 * 1024) fail(back, "La imagen supera 5 MB.");
-  if (!["image/jpeg", "image/png", "image/webp", "image/avif"].includes(file.type)) fail(back, "Formato no permitido (JPG, PNG, WEBP o AVIF).");
-  const ext = file.type.split("/")[1];
-  const path = `${productId}/${crypto.randomUUID()}.${ext}`;
-  const { error: upErr } = await staff.sb.storage.from("products").upload(path, file, { contentType: file.type, upsert: false });
-  if (upErr) fail(back, `No se pudo subir: ${upErr.message}`);
-  const { data: pub } = staff.sb.storage.from("products").getPublicUrl(path);
-  const { count } = await staff.sb.from("product_images").select("id", { count: "exact", head: true }).eq("product_id", productId);
-  const { error } = await staff.sb.from("product_images").insert({ product_id: productId, url: pub.publicUrl, alt: str(form, "alt"), position: count ?? 0 });
-  if (error) fail(back, dbError(error.message));
-  refreshCatalog();
-  done(back, "Imagen agregada.");
-}
-
 export async function deleteImage(form: FormData) {
   const staff = await requireStaff(["inventory"]);
   const productId = str(form, "product_id");
@@ -182,4 +162,52 @@ export async function endPromotion(form: FormData) {
   await staff.sb.from("promotions").update({ is_active: false, ends_at: new Date().toISOString() }).eq("product_id", productId).eq("is_active", true);
   refreshCatalog();
   done(back, "Promoción finalizada; precio restaurado.");
+}
+
+/**
+ * Registers photos already uploaded from the browser straight to Storage
+ * (bypasses the serverless body limit, so full-resolution files work).
+ * Only paths inside this product's folder in the public `products` bucket are accepted.
+ */
+const registerSchema = z.object({
+  productId: z.string().uuid(),
+  items: z.array(z.object({ path: z.string().max(300), view: z.string().max(20), note: z.string().max(80).optional().default("") })).min(1).max(20),
+});
+
+export async function registerImages(input: z.input<typeof registerSchema>): Promise<{ ok: boolean; error?: string; count?: number }> {
+  const staff = await requireStaff(["inventory"]);
+  const parsed = registerSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: "Datos de imagen inválidos." };
+  const { productId, items } = parsed.data;
+  const { data: product } = await staff.sb.from("products").select("name").eq("id", productId).maybeSingle();
+  if (!product) return { ok: false, error: "Producto no encontrado." };
+  const { viewLabel, viewPosition } = await import("@/lib/product-views");
+  const { count } = await staff.sb.from("product_images").select("id", { count: "exact", head: true }).eq("product_id", productId);
+  const rows = [];
+  for (const [i, it] of items.entries()) {
+    if (!it.path.startsWith(`${productId}/`) || it.path.includes("..")) return { ok: false, error: "Ruta de imagen no permitida." };
+    const { data: pub } = staff.sb.storage.from("products").getPublicUrl(it.path);
+    const label = viewLabel(it.view);
+    rows.push({ product_id: productId, url: pub.publicUrl, alt: it.note ? `${label} · ${it.note}` : label, position: viewPosition(it.view, (count ?? 0) + i) });
+  }
+  const { error } = await staff.sb.from("product_images").insert(rows);
+  if (error) return { ok: false, error: dbError(error.message) };
+  refreshCatalog();
+  return { ok: true, count: rows.length };
+}
+
+/** Sets (or clears) the product's authorized GLB after a direct browser upload to the `models` bucket. */
+export async function registerModel(input: { productId: string; path: string | null }): Promise<{ ok: boolean; error?: string }> {
+  const staff = await requireStaff(["inventory"]);
+  const id = z.string().uuid().safeParse(input.productId);
+  if (!id.success) return { ok: false, error: "Producto inválido." };
+  let url: string | null = null;
+  if (input.path) {
+    if (!input.path.startsWith(`${id.data}/`) || input.path.includes("..") || !input.path.endsWith(".glb")) return { ok: false, error: "Ruta de modelo no permitida." };
+    url = staff.sb.storage.from("models").getPublicUrl(input.path).data.publicUrl;
+  }
+  const { error } = await staff.sb.from("products").update({ model_url: url }).eq("id", id.data);
+  if (error) return { ok: false, error: dbError(error.message) };
+  refreshCatalog();
+  return { ok: true };
 }

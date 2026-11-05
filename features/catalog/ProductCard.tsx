@@ -31,7 +31,7 @@ export function ProductCard({ product, priority }: { product: Product; priority?
       >
         <HeartIcon filled={hydrated && wished} />
       </button>
-      <Link href={`/product/${product.slug}`} className="relative block aspect-square overflow-hidden bg-graphite/40">
+      <Link href={`/product/${product.slug}`} className={`relative block aspect-square overflow-hidden ${img ? "bg-studio" : "bg-graphite/40"}`}>
         {!img && <NoPhoto brand={product.brand.name} compact />}
         {img && (
           <Image
@@ -39,17 +39,19 @@ export function ProductCard({ product, priority }: { product: Product; priority?
             alt={img.alt}
             fill
             priority={priority}
+            quality={90}
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            className="object-contain p-5 transition-all duration-700 group-hover:scale-[1.04] group-hover:opacity-0"
+            className={`object-contain p-4 transition-all duration-700 ease-out group-hover:scale-[1.05] ${alt ? "group-hover:opacity-0" : ""}`}
           />
         )}
-        {(alt ?? img) && (
+        {alt && (
           <Image
-            src={(alt ?? img)!.url}
+            src={alt.url}
             alt=""
             fill
+            quality={90}
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            className="object-contain p-5 opacity-0 transition-opacity duration-700 group-hover:opacity-100"
+            className="object-contain p-4 opacity-0 transition-all duration-700 ease-out group-hover:scale-[1.05] group-hover:opacity-100"
           />
         )}
       </Link>
